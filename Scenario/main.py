@@ -1,5 +1,7 @@
 import random 
 import numpy as np
+import time
+
 
 class Map():
     def __init__(self) -> None:
@@ -51,12 +53,15 @@ class Map():
         
 
     def decrease_food(self):
-        if self.food_quantity >= 1:
+
+        if self.food_quantity > 1:
+            # drop food
             self.food_quantity -= 1
-        else:
+
+        elif self.food_quantity == 1:
+            # reset food
             self.food_quantity = self.inicial_food_quantity
             self.food_position = self.set_food()
-
 
 
     def decrease_pheromone(self):
@@ -88,6 +93,8 @@ class Ant():
 
         self.fiel_of_vision = random.randint(1,4)
 
+        self.carring = False
+
 
     def generrate_new_pos(self):
 
@@ -112,53 +119,69 @@ class Ant():
 
         self.x_pos = test_position_x
         self.y_pos = test_position_y
-
+        
+    def check_position(self):
+        # checar se posicao atual ou aredores possui feromonio,casa ou comida
+        # atualizar status
+        map_position = self.map[self.y_pos,self.x_pos]
+        pass
 
     def pheromone_move(self): 
+        # achar proximo feromonio no campo de visao e seguir a trilha 
         pass
 
     def go_home(self): 
+        # segui proximo passo para casa
         pass
 
     def drop_pheromone(self):  
         self.map.set_pheromone(self.x_pos,self.y_pos)
 
-    def get_food(self):  
-
-        if  self.map.decrease_food():
-           self.total_food += 1
-        else: 
-            pass #ACABOU A COMIDA INTERROMPER A SIMULAÇÃO
+    def get_food(self): 
+        self.map.decrease_food()
 
     def routine(self): 
-
-        if self.status == 0: 
-            self.random_move()
-
-            random_test  = random.randint(-1,1)
-
-            if random_test == -1:  
-                pass
-            if random_test == 1:  
-                pass
+        pass
 
 
-# generate map
-mapa = Map()
 
-#generate ants
-number_of_ants = random.randint(5,100)
-ants = []
 
-for ant in range(number_of_ants):
-    ants.append(Ant(mapa))
+#################### IGNORE (for now) ####################
+# class Simulation():
+#     def __init__(self) -> None:
 
-#simualte            
-import os
-from time import sleep
-for ant in ants:
-    ant.routine()
-    mapa.decrease_pheromone()
-    print(mapa.food_quantity)
-    print(mapa.map)
-    sleep(1)
+#         self.start_time = time.time()
+#         self.mapa = Map()  #generate map
+
+#         #generate ants
+#         self.number_of_ants = random.randint(5,100)
+#         self.ants = []
+
+#         self.CONDICAO_VENCIMENTO = self.mapa.inicial_food_quantity*10/self.number_of_ants
+
+#         for ant in range(self.number_of_ants):
+#             self.ants.append(Ant(self.mapa))
+
+#         self.report(cur_status="new")
+
+
+#     def report(self,cur_status="executing"):
+
+#         time = time.time()
+#         status = cur_status
+#         ants = [{"status":i.status,"total_food":i.total_food} for i in self.ants]
+#         anthill_food = self.mapa.anthill_food
+#         map_food = self.map.food_quantity
+        
+
+#     def run(self):  
+#         while self.mapa.anthill_food != self.QUANTIDADE_VENCIMENTO: 
+
+#             # 1 time unid = all ants run 
+#             for ant in self.ants:
+#                 ant.routine() 
+
+#             self.mapa.decrease_pheromone() # decreased pheromone lifetime in all map
+#             self.report()
+        
+#         self.report(cur_status="dead")
