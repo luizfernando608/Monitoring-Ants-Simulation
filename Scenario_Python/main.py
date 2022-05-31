@@ -3,7 +3,6 @@ import numpy as np
 
 class Map():
     def __init__(self) -> None:
-
         self.x_dim = random.randint(5,10)
         self.y_dim = random.randint(5,10)
         self.map = np.zeros((self.y_dim ,self.x_dim ),dtype=object)
@@ -23,6 +22,7 @@ class Map():
         position_y = random.randint(0,self.y_dim-1 )
 
         self.map[position_y,position_x] = "A"
+        return (position_y,position_x)
 
 
     def set_food(self): 
@@ -36,6 +36,7 @@ class Map():
 
 
         self.map[position_y,position_x] = "F"
+        return (position_y,position_x)
         
 
     def set_pheromone(self,x,y): 
@@ -50,12 +51,13 @@ class Map():
         
 
     def decrease_food(self):
-
         if self.food_quantity >= 1:
             self.food_quantity -= 1
-            return 1 
+        else:
+            self.food_quantity = self.inicial_food_quantity
+            self.food_position = self.set_food()
 
-        return 0
+
 
     def decrease_pheromone(self):
 
@@ -84,16 +86,15 @@ class Ant():
         # total food caried to anthill
         self.total_food = 0
 
-        self.fiel_of_vision = random.randint(0,4)
+        self.fiel_of_vision = random.randint(1,4)
 
 
     def generrate_new_pos(self):
 
         # generate random direction
-        direction_x = random.randint(0,1)
-        direction_y = random.randint(0,1)
-        if direction_x == 0: direction_x = -1
-        if direction_y == 0: direction_y = -1
+        direction_x = random.randint(-1,1)
+        direction_y = random.randint(-1,1)
+        
 
         # new position
         test_position_x = self.x_pos + direction_x
@@ -113,11 +114,14 @@ class Ant():
         self.y_pos = test_position_y
 
 
-    def pheromone_move(self): pass
+    def pheromone_move(self): 
+        pass
 
-    def go_home(self): pass
+    def go_home(self): 
+        pass
 
-    def drop_pheromone(self):  self.map.set_pheromone(self.x_pos,self.y_pos)
+    def drop_pheromone(self):  
+        self.map.set_pheromone(self.x_pos,self.y_pos)
 
     def get_food(self):  
 
@@ -133,8 +137,10 @@ class Ant():
 
             random_test  = random.randint(-1,1)
 
-            if random_test == -1:  self.get_food()
-            if random_test == 1:  self.drop_pheromone()
+            if random_test == -1:  
+                pass
+            if random_test == 1:  
+                pass
 
 
 # generate map
