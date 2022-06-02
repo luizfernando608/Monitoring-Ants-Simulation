@@ -1,17 +1,23 @@
 #%%
 import random
-from turtle import position 
+from numba import jit
 import numpy as np
-import time
+from time import sleep
 import debugpy
+from colorama import Fore, Back, Style
+import os
 
 class Pheromone:
-    def __init__(self, food_position, life_time = 30):
+    def __init__(self, food_position, label_antihill, life_time = 20,):
+        self.default_life_time = life_time
         self.life_time = life_time
         self.food_position = food_position
+        self.antihill = label_antihill
     def decrease_pheromone_life(self):
         self.life_time -= 1
-        
+    
+    def __str__(self):
+        return str(self.life_time)
     
 class Map():
     def __init__(self) -> None:
@@ -19,8 +25,8 @@ class Map():
         # self.y_dim = random.randint(5,10)
 
         # temp code
-        self.x_dim = 5
-        self.y_dim = 5
+        self.x_dim = 8
+        self.y_dim = 6
 
         self.anthill_position = {}
         self.map = np.zeros((self.y_dim ,self.x_dim ),dtype=object)
@@ -29,7 +35,9 @@ class Map():
         self.anthill_food = 0
 
         self.food_position = self.set_food()
-        self.inicial_food_quantity = random.randint(0,200)
+        # self.inicial_food_quantity = random.randint(0,200)
+        #Temp Implementation
+        self.inicial_food_quantity = 2
         self.food_quantity = self.inicial_food_quantity
 
         self.pheromones = []
@@ -43,8 +51,12 @@ class Map():
         return mapa
 
     def set_anthill(self, label): 
-        position_x = random.randint(0,self.x_dim-1 )
-        position_y = random.randint(0,self.y_dim-1 )
+        # position_x = random.randint(0,self.x_dim-1 )
+        # position_y = random.randint(0,self.y_dim-1 )
+        # Temp implementation
+        position_x = 0
+        position_y = 0
+    
 
         self.map[position_y,position_x] = label
         
@@ -54,6 +66,9 @@ class Map():
     def set_food(self): 
         position_x = random.randint(0,self.x_dim-1 )
         position_y = random.randint(0,self.y_dim-1 )
+        # Temp implementation
+        # position_x = self.x_dim-1
+        # position_y = self.y_dim-2
 
         while self.map[position_y,position_x] != 0:
             position_x = random.randint(0,self.x_dim-1)
@@ -63,12 +78,13 @@ class Map():
         self.map[position_y,position_x] = "F"
         return (position_y,position_x)
         
-    def set_pheromone(self,y,x): 
+    def set_pheromone(self,y,x, food_position, label_antihill): 
         if self.map[y,x] not in (["F"] + list(self.anthill_position.keys())):
+            if type(self.map[y,x]) != Pheromone:
+                self.map[y,x] = Pheromone(food_position, label_antihill)
+            else:
+                self.map[y,x].life_time = self.map[y,x].default_life_time
             
-            if self.map[y,x] >= 0:
-                self.map[y,x] = 30 #set or reset phe
-
             if (y,x) not in self.pheromones:
                 self.pheromones.append((y,x))
         
@@ -80,6 +96,7 @@ class Map():
 
         elif self.food_quantity == 1:
             # reset food
+            self.map[self.food_position[0],self.food_position[1]] = 0
             self.food_quantity = self.inicial_food_quantity
             self.food_position = self.set_food()
         
@@ -89,10 +106,11 @@ class Map():
 
         for phe in self.pheromones:
 
-            self.map[phe[0],phe[1]] -= 1
+            self.map[phe[0],phe[1]].decrease_pheromone_life()
 
-            if self.map[phe[0],phe[1]] == 0:
-                self.pheromones.remove((phe[0],phe[1]))
+            if self.map[phe[0],phe[1]].life_time == 0:
+                self.pheromones.remove(phe)
+                self.map[phe[0],phe[1]] = 0
 
 
 
@@ -104,6 +122,7 @@ class Ant():
         self.y_pos = random.randint(0,mapa.x_dim-1)
         self.antihill = label_antihill
         self.antihill_position = mapa.anthill_position[self.antihill]
+        self.dropping = False
         self.status = 0
         # status = 0 : procurando comida/feromonio
         # status = 1 : indo até a comida
@@ -124,7 +143,7 @@ class Ant():
         self.pheromone_postion = None
 
     def generrate_new_pos(self):
-        print("generrate new pos")
+        # print("generrate new pos")
         # generate random direction
         direction_x = random.randint(-1,1)
         direction_y = random.randint(-1,1)
@@ -133,12 +152,20 @@ class Ant():
         # new position
         test_position_x = self.x_pos + direction_x
         test_position_y = self.y_pos + direction_y
+        if test_position_x > self.map.x_dim-1:
+            test_position_x = self.map.x_dim-1
+        elif test_position_x < 0:
+            test_position_x = 0
+        if test_position_y > self.map.y_dim-1:
+            test_position_y = self.map.y_dim-1
+        elif test_position_y < 0:
+            test_position_y = 0
 
         return test_position_x, test_position_y
 
 
     def random_move(self): 
-        print("random move")
+        # print("random move")
         
         if self.check_position():
             return
@@ -155,25 +182,40 @@ class Ant():
         self.y_pos = test_position_y
 
 
-    def move_target(self, target_y, target_x,):
+    def move_target(self, target_y, target_x, inverse_order = False):
         # Move na direção de um alvo
-        print("move target")
+        # print("move target")
         direction_x = target_x -self.x_pos
-        if direction_x < 0:
-            direction_x = -1
-        elif direction_x > 0:
-            direction_x = 1
-        elif direction_x == 0:
-            direction_x = 0
         direction_y = target_y - self.y_pos
         
-        if  direction_y < 0:
+        if inverse_order:
+            temp_x = direction_x
+            direction_x = direction_y
+            direction_y = temp_x
+
+        # Moving like manhatan
+        if direction_x != 0:
+            direction_y = 0 
+            if direction_x < 0:
+                direction_x = -1
+            elif direction_x > 0:
+                direction_x = 1
+        else: 
+            direction_x = 0 
+        
+
+        if direction_y < 0:
             direction_y = -1
         elif direction_y > 0:
             direction_y = 1
         elif direction_y == 0:
             direction_y = 0
-                    
+
+        if inverse_order:
+            temp_x = direction_x
+            direction_x = direction_y
+            direction_y = temp_x
+
         self.x_pos += direction_x
         self.y_pos += direction_y
         
@@ -183,7 +225,6 @@ class Ant():
     def check_position(self):
         # checar se posicao atual ou aredores possui feromonio, casa ou comida
         # atualizar status
-        print("Check Position")
         
         y_start = self.y_pos - self.field_vision
         x_start = self.x_pos - self.field_vision
@@ -212,7 +253,7 @@ class Ant():
         for y in range(y_start,y_final):
             for x in range(x_start,x_final):
                 if self.map.map[y,x] == "F":
-                    print("Eu vi comida")
+                    # print("Eu vi comida")
                     self.status = 1
                     self.food_position = np.array([y,x]).copy()
                     return True
@@ -221,23 +262,57 @@ class Ant():
     
     def go_food(self):
         # Vê comida e vai até ela
-        print("go food")
+        # print("go food")
         self.move_target(self.food_position[0], self.food_position[1])
-        if self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]:
-            self.status = 2
-            self.total_food += 1
+        if (self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]):
+            if (self.map.map[self.y_pos,self.x_pos]=="F"):
+                # print("Cheguei no fim do caminho e tem comida")
+                self.status = 2
+                self.total_food += 1
             # self.food_position = None
-            self.map.decrease_food()
-            return
+                self.map.decrease_food()
+                self.dropping = True
+                return
+            else:
+                # print("Cheguei no fim do caminho e não tem comida")
+                self.check_position()
+                self.dropping = False
         pass
     
     def pheromone_move(self): 
-        self.go_food()
+        try:
+            self.food_position = self.map.map[self.y_pos,self.x_pos].food_position
+        except:
+            self.status = 0
+            self.dropping = False
+            self.random_move()
+
+        # if type(self.map.map[self.y_pos,self.x_pos]):
+            
+        # else:
+            
+
+        # print("go food by pheromonee")
+        # self.go_food()
+        self.move_target(self.food_position[0], self.food_position[1], inverse_order=True)
+        if (self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]):
+            if (self.map.map[self.y_pos,self.x_pos]=="F"):
+                # print("Cheguei no fim do caminho e tem comida")
+                self.status = 2
+                self.total_food += 1
+            # self.food_position = None
+                self.map.decrease_food()
+                self.dropping = True
+                return
+            else:
+                # print("Cheguei no fim do caminho e não tem comida")
+                self.check_position()
+                self.dropping = False
         pass
 
     def go_pheromone(self):
         # Vê o feromonio e vai até ele
-        print("go pheromone")
+        # print("go pheromone")
         self.move_target(self.pheromone_postion[0], self.pheromone_postion[1])
         if self.y_pos == self.pheromone_postion[0] and self.x_pos == self.pheromone_postion[1]:
             self.status = 4
@@ -247,8 +322,10 @@ class Ant():
 
     def go_home(self): 
         # ir até a casa
-        print("go home")
-        self.map.set_pheromone(self.y_pos, self.x_pos)
+        # print("go home")
+        if self.dropping:
+            self.map.set_pheromone(self.y_pos, self.x_pos, self.food_position,self.antihill)
+        
         self.move_target(self.antihill_position[0], self.antihill_position[1])
         
         if self.y_pos == self.antihill_position[0] and self.x_pos == self.antihill_position[1]:
@@ -258,14 +335,14 @@ class Ant():
 
     def drop_pheromone(self):
         # Solta feromonio pelo mapa 
-        self.map.set_pheromone(self.x_pos,self.y_pos)
+        self.map.set_pheromone(self.x_pos,self.y_pos,self.food_position, self.antihill)
 
     def get_food(self): 
         self.map.decrease_food()
 
     def routine(self):
         # rotina da formiga
-        print("Ants position",self.y_pos, self.x_pos)
+        # print("Ants position",self.y_pos, self.x_pos)
         
         if self.status == 0:
             self.random_move()
@@ -282,18 +359,22 @@ class Ant():
         
         pass
 
-
+@jit
 def show_map():
-    positions = {}
+    positions = []
     for formiga in formigas:
         (y,x) = formiga.y_pos, formiga.x_pos
-        positions[y] = x
-
+        positions.append((y,x))
+    
     mapa2d = ""
     for y_axis in  range(mapa.y_dim):
         for x_axis in range(mapa.x_dim):
-            if y_axis in positions and positions[y_axis] == x_axis:
+            if (y_axis,x_axis) in positions:
                 mapa2d += "\033[2;31;43m" +str(mapa.map[y_axis,x_axis])+"\033[0;0m "
+            elif mapa.map[y_axis,x_axis] == "F":
+                mapa2d+= Fore.RED + str(mapa.map[y_axis,x_axis]) + Fore.RESET + " "
+            elif mapa.map[y_axis,x_axis] == "A":
+                mapa2d += Fore.GREEN + str(mapa.map[y_axis,x_axis]) + Fore.RESET + " "
             else:
                 mapa2d += str(mapa.map[y_axis,x_axis])
                 mapa2d += " "
@@ -305,20 +386,26 @@ def show_map():
 mapa = Map()
 mapa.set_anthill("A")
 formigas = []
-NUM_FORMIGAS = 1
+NUM_FORMIGAS = 2
 
 for num in range(NUM_FORMIGAS):
     formigas.append(Ant(mapa, "A"))
 
 # print(mapa)
+@jit
+def generate_map():
+    for formiga in formigas:
+        formiga.routine()
+        # os.system('cls' if os.name == 'nt' else "printf '\033c'")
+        show_map()
+        # print("-----------------------")
 
-show_map()
 #%%
-for formiga in formigas:
-    formiga.routine()
+while True:
+    generate_map()    
+    # sleep(0.001)
 
-show_map()
-
+# show_map()
 #%%
 
 
