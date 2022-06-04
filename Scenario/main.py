@@ -13,6 +13,7 @@ class Pheromone:
         self.life_time = life_time
         self.food_position = food_position
         self.antihill = label_antihill
+        
     def decrease_pheromone_life(self):
         self.life_time -= 1
     
