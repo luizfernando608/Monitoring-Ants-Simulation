@@ -1,0 +1,9 @@
+No pasta /PubSubscribe
+
+Crie o RabbitMQ com o comando no terminal
+> docker compose up
+
+Execute o consumidor das requisições com
+> celery -A consumer worker -l info --pool=solo
+
+Com isso, execute a partir do publisher.py as funções do consumer.py
