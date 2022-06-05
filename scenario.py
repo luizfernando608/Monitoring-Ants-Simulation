@@ -1,11 +1,15 @@
 """
 Ants Simulation in Python
 """
-#%%
 import random
 import numpy as np
 from colorama import Fore, Back, Style
-import time
+from time import time, sleep
+from rpc_files import scenario_pb2_grpc
+import rpc_files.scenario_pb2 as pb
+import grpc
+from concurrent import futures
+
 
 class Pheromone:
     def __init__(self, food_position, label_antihill, life_time = 20,):
@@ -78,14 +82,17 @@ class Map():
     def decrease_food(self):
 
         if self.food_quantity > 1:
-            # drop food
-            self.food_quantity -= 1
+            self.food_quantity -= 1  # drop food
 
         elif self.food_quantity == 1:
-            # reset food
+            self.food_quantity -= 1
+
+            #reset food
             self.map[self.food_position[0],self.food_position[1]] = 0
             self.food_quantity = self.inicial_food_quantity
+            self.inicial_food_quantity += self.inicial_food_quantity
             self.food_position = self.set_food()
+
         
     def decrease_pheromone(self):
 
@@ -116,7 +123,6 @@ class Ant():
 
         self.total_food = 0
         self.field_vision = random.randint(1,4)
-        self.carring = False
         self.food_position = None
         self.pheromone_postion = None
 
@@ -139,17 +145,8 @@ class Ant():
 
 
     def random_move(self): 
-        if self.check_position():
-            return
-
+        if self.check_position(): return
         test_position_x, test_position_y = self.generrate_new_pos()
-
-        # new position cant be bigger than map dimensions 
-        while (test_position_x > self.map.x_dim-1 or test_position_y > self.map.y_dim-1
-                or 
-                test_position_x < 0 or test_position_y < 0):
-
-             test_position_x, test_position_y = self.generrate_new_pos()
         self.x_pos = test_position_x
         self.y_pos = test_position_y
 
@@ -193,81 +190,97 @@ class Ant():
 
 
     def check_position(self):
+        """
+        Check for pheromone or food in ant field of vision
+        """
 
         y_start = self.y_pos - self.field_vision
         x_start = self.x_pos - self.field_vision
-        if y_start < 0:
-            y_start = 0
-        if x_start < 0:
-            x_start = 0
+
+        if y_start < 0: y_start = 0
+        if x_start < 0: x_start = 0
         
         y_final = self.y_pos + self.field_vision+1
         x_final = self.x_pos + self.field_vision+1
-        if y_final > self.map.y_dim-1:
-            y_final = self.map.y_dim
-        if x_final > self.map.x_dim-1:
-            x_final = self.map.x_dim
 
+        if y_final > self.map.y_dim-1:  y_final = self.map.y_dim
+        if x_final > self.map.x_dim-1:  x_final = self.map.x_dim
+
+        # check for pheromone
         for pheromone in self.map.pheromones:
             if pheromone[0] >= y_start and pheromone[0] <= y_final:
                 if pheromone[1] >= x_start and pheromone[1] <= x_final:
                     self.status = 3
                     self.pheromone_postion = pheromone
                     
-
-        ### CHECANDO SE POSSUI COMIDA        
+        # check for food
         for y in range(y_start,y_final):
             for x in range(x_start,x_final):
                 if self.map.map[y,x] == "F":
                     self.status = 1
                     self.food_position = np.array([y,x]).copy()
                     return True
-        pass
+
+        return False
+        
 
     
     def go_food(self):
-
+        """
+        Go get food
+        """
+        
         self.move_target(self.food_position[0], self.food_position[1])
+
         if (self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]):
             if (self.map.map[self.y_pos,self.x_pos]=="F"):
+                # reched food
+                self.map.decrease_food()
                 self.status = 2
                 self.total_food += 1
-                self.map.decrease_food()
                 self.dropping = True
-                return
             else:
                 self.check_position()
                 self.dropping = False
-        pass
+         
     
     def pheromone_move(self): 
+        """
+        Follow the pheromone trail 
+        """
+
         try:
             self.food_position = self.map.map[self.y_pos,self.x_pos].food_position
         except:
             self.status = 0
             self.dropping = False
             self.random_move()
+            return 
 
         self.move_target(self.food_position[0], self.food_position[1], inverse_order=True)
+        # self.check_position()
+        
         if (self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]):
             if (self.map.map[self.y_pos,self.x_pos]=="F"):
+                self.map.decrease_food()
                 self.status = 2
                 self.total_food += 1
-                self.map.decrease_food()
                 self.dropping = True
                 return
             else:
                 self.check_position()
                 self.dropping = False
-        pass
+        
 
     def go_pheromone(self):
+
         self.move_target(self.pheromone_postion[0], self.pheromone_postion[1])
+
         if self.y_pos == self.pheromone_postion[0] and self.x_pos == self.pheromone_postion[1]:
             self.status = 4
             self.pheromone_postion = None
             return
-        pass
+        
 
     def go_home(self): 
         if self.dropping:
@@ -276,6 +289,7 @@ class Ant():
         self.move_target(self.antihill_position[0], self.antihill_position[1])
         
         if self.y_pos == self.antihill_position[0] and self.x_pos == self.antihill_position[1]:
+            self.map.anthill_food += 1
             self.check_position()
             return
         pass
@@ -283,8 +297,7 @@ class Ant():
     def drop_pheromone(self):
         self.map.set_pheromone(self.x_pos,self.y_pos,self.food_position, self.antihill)
 
-    def get_food(self): 
-        self.map.decrease_food()
+
 
     def routine(self):
         
@@ -303,13 +316,10 @@ class Ant():
         
         pass
 
+class SimulationServer(scenario_pb2_grpc.Simulation):
 
-
-class Simulation():
-    def __init__(self,id) -> None:
-        self.id = id
-        self.start_time = time.time()
-
+    def __init__(self) -> None:
+        
         self.mapa = Map()
         self.mapa.set_anthill("A")
 
@@ -329,9 +339,9 @@ class Simulation():
         mapa2d = ""
         for y_axis in  range(self.mapa.y_dim):
             for x_axis in range(self.mapa.x_dim):
-                if (y_axis,x_axis) in positions:
-                    mapa2d += "\033[2;31;43m" +str(self.mapa.map[y_axis,x_axis])+"\033[0;0m "
-                elif self.mapa.map[y_axis,x_axis] == "F":
+                # if (y_axis,x_axis) in positions:
+                #     mapa2d += "\033[2;31;43m" +str(self.mapa.map[y_axis,x_axis])+"\033[0;0m "
+                if self.mapa.map[y_axis,x_axis] == "F":
                     mapa2d+= Fore.RED + str(self.mapa.map[y_axis,x_axis]) + Fore.RESET + " "
                 elif self.mapa.map[y_axis,x_axis] == "A":
                     mapa2d += Fore.GREEN + str(self.mapa.map[y_axis,x_axis]) + Fore.RESET + " "
@@ -339,32 +349,47 @@ class Simulation():
                     mapa2d += str(self.mapa.map[y_axis,x_axis])
                     mapa2d += " "
             
+            
             mapa2d += "\n"
 
         print(rf"{mapa2d}")
 
 
-    def report(self): 
-        elapsed =  time.time() - self.start_time
-        status = "executing"
+    def report(self,status="executing",ants_info=[]): 
 
-        print(f"""
-        {self.id},
-        {elapsed},
-        {status},
-        {self.mapa.inicial_food_quantity},
-        {self.mapa.food_quantity}  """)
-    
+        return pb.Report(elapsed = time() - self.start_time,
+            status = status,
+            total_food = self.mapa.inicial_food_quantity,
+            map_food = self.mapa.anthill_food,
+            ants_info = f"{ants_info}")
 
-    def simulate(self):
 
-        while self.mapa.anthill_food <= self.NUM_FORMIGAS*5:
+    def RunSimulation(self, request, context):
+
+        self.start_time = time()
+        yield self.report(status="start")
+        print("__start__")
+        
+        while self.mapa.anthill_food <= self.NUM_FORMIGAS*10:
+            ants_report = []
             for formiga in self.formigas:
                 formiga.routine()
-                self.report()
+                ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
+                yield self.report(ants_info=ants_report)
 
-        self.report(status="dead")
+
+        yield self.report(status="end")
+        print("__end__")
 
 
-simulacao = Simulation(1)
-simulacao.simulate()
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    scenario_pb2_grpc.add_SimulationServicer_to_server(SimulationServer(), server)
+    server.add_insecure_port('[::]:50051')
+    server.start()
+    server.wait_for_termination()
+
+if __name__ == "__main__":
+    print("Server Started")
+    serve()

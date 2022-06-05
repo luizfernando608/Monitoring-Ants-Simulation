@@ -4,7 +4,7 @@ Now:
 
 Building Database (Carlos and Ari)
 
-Building simulation (Lívia and Luiz)
+Building RPC and Bloker (Lívia and Luiz)
 
 Next Steps:
 

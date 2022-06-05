@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+service Simulation {
+    rpc RunSimulation(ID) returns (stream Report) {}
+}
+
+message ID {
+    int32 scenario_id = 1;
+}
+
+message Report {
+    double elapsed = 1;
+    string status = 2;
+    int32 total_food = 3;
+    int32 map_food = 4;
+    string ants_info = 5;
+}
