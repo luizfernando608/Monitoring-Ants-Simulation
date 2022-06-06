@@ -27,7 +27,7 @@ def insert_scenario(status:str, tempo_execucao:float, quantidade_total_comida:in
     insert_scenario = (
         insert(scenario).
         values(
-            status="running",
+            status=status,
             tempo_execucao=0,
             quantidade_total_comida=1000
         )
