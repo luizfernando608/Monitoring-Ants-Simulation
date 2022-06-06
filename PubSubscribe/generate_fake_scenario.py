@@ -5,7 +5,7 @@ import numpy as np
 #%%
 
 for i in range(1,100):
-    status = np.random.choice(["running","finished"],p=[0.7,0.3], size=1)[0]
+    status = np.random.choice(["running","finished"],p=[0.6,0.4], size=1)[0]
     quantidade_total_comida = 10000
     if status == "running":
         tempo_execucao = 0
