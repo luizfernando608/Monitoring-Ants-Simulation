@@ -319,7 +319,11 @@ class Ant():
 class SimulationServer(scenario_pb2_grpc.Simulation):
 
     def __init__(self) -> None:
+        super().__init__()
         
+    
+    def StartScenario(self, request, context):
+        self.id = request.ID
         self.mapa = Map()
         self.mapa.set_anthill("A")
 
@@ -329,38 +333,17 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
         for num in range(self.NUM_FORMIGAS):
             self.formigas.append(Ant(self.mapa, "A"))
 
-    
-    def show_map(self):
-        positions = []
-        for formiga in self.formigas:
-            (y,x) = formiga.y_pos, formiga.x_pos
-            positions.append((y,x))
-        
-        mapa2d = ""
-        for y_axis in  range(self.mapa.y_dim):
-            for x_axis in range(self.mapa.x_dim):
-                # if (y_axis,x_axis) in positions:
-                #     mapa2d += "\033[2;31;43m" +str(self.mapa.map[y_axis,x_axis])+"\033[0;0m "
-                if self.mapa.map[y_axis,x_axis] == "F":
-                    mapa2d+= Fore.RED + str(self.mapa.map[y_axis,x_axis]) + Fore.RESET + " "
-                elif self.mapa.map[y_axis,x_axis] == "A":
-                    mapa2d += Fore.GREEN + str(self.mapa.map[y_axis,x_axis]) + Fore.RESET + " "
-                else:
-                    mapa2d += str(self.mapa.map[y_axis,x_axis])
-                    mapa2d += " "
-            
-            
-            mapa2d += "\n"
-
-        print(rf"{mapa2d}")
+        return pb.Confirmation(sucess=1)
 
 
     def report(self,status="executing",ants_info=[]): 
 
-        return pb.Report(elapsed = time() - self.start_time,
+        return pb.Report(
+            elapsed = time() - self.start_time,
             status = status,
             total_food = self.mapa.inicial_food_quantity,
-            map_food = self.mapa.anthill_food,
+            map_food = self.mapa.food_quantity,
+            anthill_food = self.mapa.anthill_food,
             ants_info = f"{ants_info}")
 
 
@@ -368,19 +351,19 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
 
         self.start_time = time()
         yield self.report(status="start")
-        print("__start__")
         
         while self.mapa.anthill_food <= self.NUM_FORMIGAS*10:
+            
             ants_report = []
+
             for formiga in self.formigas:
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
-                yield self.report(ants_info=ants_report)
+            
+            yield self.report(ants_info=ants_report)
 
 
         yield self.report(status="end")
-        print("__end__")
-
 
 
 def serve():

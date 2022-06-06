@@ -2,10 +2,15 @@ syntax = "proto3";
 
 service Simulation {
     rpc RunSimulation(ID) returns (stream Report) {}
+    rpc StartScenario(ID) returns (Confirmation) {}
 }
 
 message ID {
     int32 scenario_id = 1;
+}
+
+message Confirmation {
+    int32 sucess = 1;
 }
 
 message Report {
@@ -13,5 +18,6 @@ message Report {
     string status = 2;
     int32 total_food = 3;
     int32 map_food = 4;
-    string ants_info = 5;
+    int32 anthill_food = 5;
+    string ants_info = 6;
 }
