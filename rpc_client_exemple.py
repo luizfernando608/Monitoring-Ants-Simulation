@@ -10,9 +10,5 @@ with grpc.insecure_channel('localhost:50051') as channel:
     request = pb.ID(scenario_id=1)
 
     simulation = stub.StartScenario(request)
-
-    print(simulation.sucess)
-    print("here")
-
     for feature in stub.RunSimulation(request):
         print(feature)

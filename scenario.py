@@ -323,7 +323,6 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
         
     
     def StartScenario(self, request, context):
-        self.id = request.ID
         self.mapa = Map()
         self.mapa.set_anthill("A")
 
@@ -352,8 +351,9 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
         self.start_time = time()
         yield self.report(status="start")
         
-        while self.mapa.anthill_food <= self.NUM_FORMIGAS*10:
-            
+        # while self.mapa.anthill_food <= self.NUM_FORMIGAS:
+        for i in range(10):
+            print(i)
             ants_report = []
 
             for formiga in self.formigas:
