@@ -1,14 +1,12 @@
 """
 Ants Simulation in Python
 """
+#%%
 import random
 import numpy as np
 from colorama import Fore, Back, Style
 from time import time, sleep
-from rpc_files import scenario_pb2_grpc
-import rpc_files.scenario_pb2 as pb
-import grpc
-from concurrent import futures
+from PubSubscribe.consumer import *
 
 
 class Pheromone:
@@ -298,7 +296,6 @@ class Ant():
         self.map.set_pheromone(self.x_pos,self.y_pos,self.food_position, self.antihill)
 
 
-
     def routine(self):
         
         if self.status == 0:
@@ -316,13 +313,13 @@ class Ant():
         
         pass
 
-class SimulationServer(scenario_pb2_grpc.Simulation):
+class SimulationServer():
 
     def __init__(self) -> None:
-        super().__init__()
+        pass
         
     
-    def StartScenario(self, request, context):
+    def StartScenario(self ):
         self.mapa = Map()
         self.mapa.set_anthill("A")
 
@@ -332,47 +329,44 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
         for num in range(self.NUM_FORMIGAS):
             self.formigas.append(Ant(self.mapa, "A"))
 
-        return pb.Confirmation(sucess=1)
+        return "Foi"
 
 
-    def report(self,status="executing",ants_info=[]): 
+    def publish(self,status="executing",ants_info=[]): 
+        data = dict(
+                    elapsed = time() - self.start_time,
+                    status = status,
+                    total_food = self.mapa.inicial_food_quantity,
+                    map_food = self.mapa.food_quantity,
+                    anthill_food = self.mapa.anthill_food,
+                    ants_info = f"{ants_info}")
+        return publish_data(data)
 
-        return pb.Report(
-            elapsed = time() - self.start_time,
-            status = status,
-            total_food = self.mapa.inicial_food_quantity,
-            map_food = self.mapa.food_quantity,
-            anthill_food = self.mapa.anthill_food,
-            ants_info = f"{ants_info}")
 
 
-    def RunSimulation(self, request, context):
+    def RunSimulation(self):
 
         self.start_time = time()
-        yield self.report(status="start")
-        
-        # while self.mapa.anthill_food <= self.NUM_FORMIGAS:
-        for i in range(10):
+        #yield aqui
+        self.publish(status="start")
+        # sleep(3)
+        # while self.mapa.anthill_food <= self.NUM_FORMIGAS*300:
+        for i in range(1000):
             print(i)
             ants_report = []
-
+            sleep(1)
             for formiga in self.formigas:
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
-            
-            yield self.report(ants_info=ants_report)
+                sleep(1)
+            # yield aqui
+            self.publish(ants_info=ants_report)
 
+        # yield aqui
+        self.publish(status="end")
 
-        yield self.report(status="end")
+#%%
+simulation = SimulationServer()
+simulation.StartScenario()
+simulation.RunSimulation()
 
-
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    scenario_pb2_grpc.add_SimulationServicer_to_server(SimulationServer(), server)
-    server.add_insecure_port('[::]:50051')
-    server.start()
-    server.wait_for_termination()
-
-if __name__ == "__main__":
-    print("Server Started")
-    serve()
