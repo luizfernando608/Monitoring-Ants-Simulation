@@ -73,7 +73,8 @@ def update_scenario(ID:str,total_food:int,map_food:int,elapsed:float,status:str)
          values(
              status=status,
              elapsed=elapsed,
-             map_food=map_food
+             map_food=map_food,
+             total_food=total_food
         )
      )
     engine.execute(update_scenario_status)
