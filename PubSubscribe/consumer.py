@@ -28,13 +28,17 @@ def insert_scenario(status:str, tempo_execucao:float, quantidade_total_comida:in
         insert(scenario).
         values(
             status=status,
-            tempo_execucao=0,
-            quantidade_total_comida=1000
+            tempo_execucao=tempo_execucao,
+            quantidade_total_comida=quantidade_total_comida
         )
     )
     engine.execute(insert_scenario)
     return True
 
+
+@app.task
+def publish_data(data:dict):
+    print(data)
 
 
 @app.task
@@ -82,7 +86,7 @@ def update_scenario_food(id_scenario:int, total_comida:int)->bool:
 
 #%%
 @app.task
-def update_antihill(id_antihill:int,quantidade_comida:int, quantidade_formiga_carregando:int, quantidade_formiga_procurando:int, maximo_carregado_formiga:int)->bool:
+def update_antihill(id_antihill:int,quantidade_comida:int, quantidade_formiga_carregando:int, quantidade_formiga_procurando:int, maximo_carregado_formiga:int, id_cenario:int)->bool:
     anthill = meta.tables["formigueiro"]
     update_antihill = (
         update(anthill).
@@ -92,7 +96,7 @@ def update_antihill(id_antihill:int,quantidade_comida:int, quantidade_formiga_ca
             quantidade_formiga_carregando=quantidade_formiga_carregando,
             quantidade_formiga_procurando=quantidade_formiga_procurando,
             maximo_carregado_formiga = maximo_carregado_formiga,
-            id_cenario=1
+            id_cenario=id_cenario
         )
     )
     engine.execute(update_antihill)
