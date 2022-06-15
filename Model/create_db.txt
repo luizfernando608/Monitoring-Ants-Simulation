@@ -1,0 +1,29 @@
+CREATE TABLE scenario
+(
+  ID INT NOT NULL,
+  ants_quantity INT NOT NULL,
+  total_food INT NOT NULL,
+  map_food INT NOT NULL,
+  elapsed FLOAT NOT NULL,
+  status INT NOT NULL,
+  PRIMARY KEY (ID)
+);
+
+CREATE TABLE anthill
+(
+  ID INT NOT NULL,
+  food_quantity INT NOT NULL,
+  scenario_id INT NOT NULL,
+  PRIMARY KEY (ID),
+  FOREIGN KEY (scenario_id) REFERENCES scenario(ID)
+);
+
+CREATE TABLE ant
+(
+  ID INT NOT NULL,
+  status INT NOT NULL,
+  total_food INT NOT NULL,
+  anthill_id INT NOT NULL,
+  PRIMARY KEY (ID),
+  FOREIGN KEY (anthill_id) REFERENCES anthill(ID)
+);
