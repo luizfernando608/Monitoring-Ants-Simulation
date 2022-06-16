@@ -3,10 +3,18 @@ Ants Simulation in Python
 """
 #%%
 import random
+from matplotlib import container
 import numpy as np
 from colorama import Fore, Back, Style
 from time import time, sleep
-from PubSubscribe.consumer import *
+from consumer import insert_scenario, publish_data
+from sqlalchemy import engine, MetaData, select
+
+
+#%%
+
+
+id_scenario_instance=9
 
 
 class Pheromone:
@@ -329,44 +337,55 @@ class SimulationServer():
         for num in range(self.NUM_FORMIGAS):
             self.formigas.append(Ant(self.mapa, "A"))
 
-        return "Foi"
+
+        ### SEND FIRST DATA ###
+        self.start_time = time()
+        ants_report = []
+        for formiga in self.formigas:
+            formiga.routine()
+            ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
+        
+        self.publish(status="start", ants_info=ants_report)
+
+        return True
 
 
     def publish(self,status="executing",ants_info=[]): 
-        data = dict(
+        self.data = dict(
+                    id_scenario_instance = id_scenario_instance,
                     elapsed = time() - self.start_time,
                     status = status,
                     total_food = self.mapa.inicial_food_quantity,
                     map_food = self.mapa.food_quantity,
                     anthill_food = self.mapa.anthill_food,
-                    ants_info = f"{ants_info}")
-        return publish_data(data)
+                    ants_info = ants_info)
+        try:
+            publish_data.delay(self.data)
+        except:
+            pass
+        
+        
 
 
-
-    def RunSimulation(self):
-
-        self.start_time = time()
-        #yield aqui
-        self.publish(status="start")
-        # sleep(3)
-        # while self.mapa.anthill_food <= self.NUM_FORMIGAS*300:
-        for i in range(1000):
-            print(i)
+    def RunSimulation(self):    
+        pass
+        while self.mapa.anthill_food <= self.NUM_FORMIGAS*300:
+        # for i in range(1000):
             ants_report = []
-            sleep(1)
+
             for formiga in self.formigas:
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
-                sleep(1)
-            # yield aqui
-            self.publish(ants_info=ants_report)
+                # sleep(0.1)
 
-        # yield aqui
+            self.publish(ants_info=ants_report, status="executing")
+            
+            
+
         self.publish(status="end")
+        
 
 #%%
 simulation = SimulationServer()
 simulation.StartScenario()
 simulation.RunSimulation()
-
