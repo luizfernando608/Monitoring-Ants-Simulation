@@ -357,11 +357,11 @@ class SimulationServer():
                     anthill_food = self.mapa.anthill_food,
                     ants_info = ants_info)
 
-        publish_data(self.data)
-        # try:
-        #     publish_data.delay(self.data)
-        # except:
-        #     pass
+        # publish_data(self.data)
+        try:
+            publish_data.delay(self.data)
+        except:
+            pass
         
         
 
@@ -395,7 +395,7 @@ while True:
     count += 1
     sleep(0.1)
     print(count)
-    if count > 2:
+    if count > 0:
         break
 
 print("Total time: ", time() - start_time)
