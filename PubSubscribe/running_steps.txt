@@ -6,4 +6,8 @@ Crie o RabbitMQ com o comando no terminal
 Execute o consumidor das requisições com
 > celery -A consumer worker -l info --pool=solo
 
+Worker concorrente
+pip install eventlet
+- celery -A consumer worker -l info --concurrency 4 -P eventlet
+
 Com isso, execute a partir do publisher.py as funções do consumer.py
