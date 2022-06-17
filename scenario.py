@@ -1,7 +1,6 @@
 """
 Ants Simulation in Python
 """
-#%%
 import random
 from matplotlib import container
 import numpy as np
@@ -11,7 +10,6 @@ from consumer import insert_scenario, publish_data
 from sqlalchemy import engine, MetaData, select
 
 
-#%%
 
 
 id_scenario_instance=9

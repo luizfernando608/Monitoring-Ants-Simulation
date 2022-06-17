@@ -1,6 +1,10 @@
+"""
+Instancia e recebe as mensagens (dados) da simulação em streamimg
+Como optamos por não utilizar o RPC - devido a falta de necessidade - o código nao foi finalizado
+"""
 import grpc
-import rpc_files.scenario_pb2 as pb
-import rpc_files.scenario_pb2_grpc as grp
+import scenario_pb2 as pb
+import scenario_pb2_grpc as grp
 
 
 with grpc.insecure_channel('localhost:50051') as channel:

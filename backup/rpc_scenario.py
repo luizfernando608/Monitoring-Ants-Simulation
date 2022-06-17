@@ -1,12 +1,12 @@
 """
-Ants Simulation in Python
+Simulação das formigas com conexão do RPC
+A classe SimulationServer envia dados da simulação em streamling 
 """
 import random
 import numpy as np
-from colorama import Fore, Back, Style
-from time import time, sleep
-from rpc_files import scenario_pb2_grpc
-import rpc_files.scenario_pb2 as pb
+from time import time
+import scenario_pb2_grpc
+import scenario_pb2 as pb
 import grpc
 from concurrent import futures
 
@@ -351,9 +351,7 @@ class SimulationServer(scenario_pb2_grpc.Simulation):
         self.start_time = time()
         yield self.report(status="start")
         
-        # while self.mapa.anthill_food <= self.NUM_FORMIGAS:
-        for i in range(10):
-            print(i)
+        while self.mapa.anthill_food <= self.NUM_FORMIGAS*500:
             ants_report = []
 
             for formiga in self.formigas:
