@@ -8,6 +8,6 @@ Execute o consumidor das requisições com
 
 Worker concorrente
 pip install eventlet
-- celery -A consumer worker -l info --concurrency 4 -P eventlet
+- celery -A consumer worker -l info --concurrency=20 -P eventlet
 
 Com isso, execute a partir do publisher.py as funções do consumer.py
