@@ -3,20 +3,13 @@ Ants Simulation in Python
 """
 #%%
 import random
-from matplotlib import container
 import numpy as np
 from colorama import Fore, Back, Style
 from time import time, sleep
-from consumer import insert_scenario, publish_data
-from sqlalchemy import engine, MetaData, select
-
+from consumer import publish_data
+import uuid
 
 #%%
-
-
-id_scenario_instance=9
-
-
 class Pheromone:
     def __init__(self, food_position, label_antihill, life_time = 20,):
         self.default_life_time = life_time
@@ -30,6 +23,7 @@ class Pheromone:
     def __str__(self):
         return str(self.life_time)
     
+
 class Map():
     def __init__(self) -> None:
 
@@ -321,10 +315,14 @@ class Ant():
         
         pass
 
+
 class SimulationServer():
 
     def __init__(self) -> None:
-        pass
+        # Generate an unique id for the simulation
+        print("Start new simulatio")
+        self.id_scenario_instance= str(uuid.uuid4())
+        
         
     
     def StartScenario(self ):
@@ -352,23 +350,25 @@ class SimulationServer():
 
     def publish(self,status="executing",ants_info=[]): 
         self.data = dict(
-                    id_scenario_instance = id_scenario_instance,
+                    id_scenario_instance = self.id_scenario_instance,
                     elapsed = time() - self.start_time,
                     status = status,
                     total_food = self.mapa.inicial_food_quantity,
                     map_food = self.mapa.food_quantity,
                     anthill_food = self.mapa.anthill_food,
                     ants_info = ants_info)
-        try:
-            publish_data.delay(self.data)
-        except:
-            pass
+
+        publish_data(self.data)
+        # try:
+        #     publish_data.delay(self.data)
+        # except:
+        #     pass
         
         
 
 
     def RunSimulation(self):    
-        pass
+        
         while self.mapa.anthill_food <= self.NUM_FORMIGAS*300:
         # for i in range(1000):
             ants_report = []
@@ -376,16 +376,27 @@ class SimulationServer():
             for formiga in self.formigas:
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
-                # sleep(0.1)
+            
+            sleep(0.01)
 
             self.publish(ants_info=ants_report, status="executing")
             
-            
-
-        self.publish(status="end")
+        self.publish(status="end", ants_info=ants_report)
         
 
 #%%
-simulation = SimulationServer()
-simulation.StartScenario()
-simulation.RunSimulation()
+count = 0
+start_time = time()
+while True:
+    simulation = SimulationServer()
+    simulation.StartScenario()
+    print("Scenario started")
+    simulation.RunSimulation()
+    print("Scenario ended")
+    count += 1
+    sleep(0.1)
+    print(count)
+    if count > 2:
+        break
+
+print("Total time: ", time() - start_time)
