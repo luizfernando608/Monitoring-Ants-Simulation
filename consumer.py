@@ -1,4 +1,5 @@
 #%%
+from tracemalloc import start
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Back, Style
@@ -10,13 +11,22 @@ def print_blue(text:str):
 
 
 
-#### DATABASE CONNECTION
+#### DATABASE POSTGRES CONNECTION
+# database_type = "postgresql"
+# user_database = "ympevcvwzchqwr"
+# password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+# hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+# port = "5432"
+# database_name = "d6rl9e5tvp50sh"
+
+
+#### DATABASE MYSQL CONNECTION
 database_type = "postgresql"
-user_database = "ympevcvwzchqwr"
-password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+user_database = "postgres"
+password  = "1234"
+hostname = "localhost"
 port = "5432"
-database_name = "d6rl9e5tvp50sh"
+database_name = "ants"
 engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
 meta = MetaData(bind=engine)
 MetaData.reflect(meta)
@@ -97,7 +107,8 @@ def update_antihill(id_scenario:str,food_quantity:int, id_anthill="A")->bool:
     scenario = meta.tables['scenario']
     update_anthill = (
         update(anthill).
-        where(and_(scenario.c.id == id_scenario,anthill.c.id==id_anthill)).
+        where(and_(anthill.c.scenario_id == id_scenario, 
+                   anthill.c.id=="A")).
         values(
             food_quantity = food_quantity
         )
@@ -106,24 +117,27 @@ def update_antihill(id_scenario:str,food_quantity:int, id_anthill="A")->bool:
     engine.execute(update_anthill)
     return True
 
-def update_ant(id:str,id_scenario,status:str,total_food:int,id_anthill="A")->bool:
-    ant = meta.tables['ant']
-    anthill = meta.tables['anthill']
-    scenario = meta.tables['scenario']
-    update_ant = (
-        update(ant).
-        where(and_(ant.c.id==id, scenario.c.id==id_scenario, anthill.c.id==id_anthill)).
-        values(
-            status = status,
-            total_food = total_food
-        )
-    )
-    engine.execute(update_ant)
-    return True
 
+def update_ants(ants_info:list, scenario_id:str):
+    ant_table = meta.tables['ant']
+    anthill_table = meta.tables['anthill']
+    scenario_table = meta.tables['scenario']
+    with engine.begin() as conn:
+        for i, ant in enumerate(ants_info):    
+            update_ant = (
+                update(ant_table).
+                where(and_(ant_table.c.id==i, 
+                           ant_table.c.scenario_id==scenario_id, 
+                            ant_table.c.anthill_id=="A")).
+                values(
+                    status = ant['status'],
+                    total_food = ant['total_food']))
+        
+        conn.execute(update_ant)
+        
 
-@app.task(bind=True)
-def publish_data(self, data:dict):
+@app.task
+def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
     scenario_instance = meta.tables['scenario']
     scenario_instance_query = (select([scenario_instance.c.id]).where(scenario_instance.c.id == data['id_scenario_instance']))
@@ -132,7 +146,7 @@ def publish_data(self, data:dict):
     print_blue(ids_scenario_instance)
     if len(ids_scenario_instance) == 0:
         print("publish data")
-        id_scenario = insert_scenario(
+        insert_scenario(
                         id = data['id_scenario_instance'],
                         ants_quantity = len(data['ants_info']), 
                         total_food = data['total_food'], 
@@ -140,10 +154,10 @@ def publish_data(self, data:dict):
                         elapsed = data['elapsed'],
                         status=0) 
 
-        id_anthill = insert_anthill(
+        insert_anthill(
                         id ="A",
                         food_quantity = data['anthill_food'], 
-                        scenario_id = id_scenario)
+                        scenario_id = data['id_scenario_instance'])
 
         for i in range(len(data['ants_info'])):
             ant = data['ants_info'][i]
@@ -157,7 +171,7 @@ def publish_data(self, data:dict):
 
     else:
         print("update data")
-        
+        print("update scenario")
         update_scenario(
                         id=data["id_scenario_instance"],
                         status=data["status"],
@@ -166,105 +180,11 @@ def publish_data(self, data:dict):
                         total_food=data["total_food"],
                         ants_quantity=len(data["ants_info"])
                         ) #status
-        
+        print("update anthill")
         update_antihill(
                         id_scenario=data["id_scenario_instance"],
                         food_quantity=data['anthill_food'])
+       
+        print("update ants")
+        update_ants(data['ants_info'], data['id_scenario_instance'])        
 
-        for i in range(0,len(data['ants_info'])):
-            ant = data['ants_info'][i]
-            update_ant(id=i, status= data['status'], total_food= data['total_food'], id_scenario=data["id_scenario_instance"])
-        
-
-
-start_data = {'id_scenario_instance' : 6,
-            'elapsed': 0.0, 
-            'status': 'executing', 
-            'total_food': 151, 
-            'map_food': 151, 
-            'anthill_food': 10, 
-            'ants_info': [
-                {'status': 1, 'total_food': 0}, 
-                {'status': 0, 'total_food': 0}]}
-
-
-
-
-
-
-#%%
-
-
-# @app.task
-# def insert_scenario(status:str, tempo_execucao:float, quantidade_total_comida:int)-> bool:
-#     scenario = meta.tables['cenario']
-#     insert_scenario = (
-#         insert(scenario).
-#         values(
-#             status=status,
-#             tempo_execucao=tempo_execucao,
-#             quantidade_total_comida=quantidade_total_comida
-#         )
-#     )
-#     engine.execute(insert_scenario)
-#     return True
-
-# @app.task
-# def insert_antihill(quantidade_comida:int, quantidade_formiga_carregando:int, quantidade_formiga_procurando:int, maximo_carregado_formiga:int, id_cenario:int):
-#     antihill = meta.tables['formigueiro']
-#     insert_antihill= (
-#     insert(antihill).
-#     values(
-#         quantidade_comida=quantidade_comida,
-#         quantidade_formiga_carregando=quantidade_formiga_carregando,
-#         quantidade_formiga_procurando=quantidade_formiga_procurando,
-#         maximo_carregado_formiga=maximo_carregado_formiga,
-#         id_cenario=id_cenario)
-#     )
-#     engine.execute(insert_antihill)
-#     return True
-
-
-# @app.task
-# def update_scenario_status(id_scenario:int ,status:str, tempo_execucao:float=0)->bool:
-#     scenario = meta.tables["cenario"]
-#     update_scenario_status = (
-#         update(scenario).
-#         where(scenario.c.id_cenario == id_scenario).
-#         values(status=status,
-#             tempo_execucao=tempo_execucao)
-#     )
-#     engine.execute(update_scenario_status)
-#     return True
-
-
-# #%%
-# @app.task
-# def update_scenario_food(id_scenario:int, total_comida:int)->bool:
-#     scenario = meta.tables["cenario"]
-#     update_scenario_quantidade_comida = (
-#         update(scenario).
-#         where(scenario.c.id_cenario == id_scenario).
-#         values(quantidade_total_comida=total_comida)
-#     )
-#     engine.execute(
-#         update_scenario_quantidade_comida
-#     )
-#     return True
-
-# #%%
-# @app.task
-# def update_antihill(id_antihill:int,quantidade_comida:int, quantidade_formiga_carregando:int, quantidade_formiga_procurando:int, maximo_carregado_formiga:int, id_cenario:int)->bool:
-#     anthill = meta.tables["formigueiro"]
-#     update_antihill = (
-#         update(anthill).
-#         where(anthill.c.id_formigueiro == id_antihill).
-#         values(
-#             quantidade_comida=quantidade_comida,
-#             quantidade_formiga_carregando=quantidade_formiga_carregando,
-#             quantidade_formiga_procurando=quantidade_formiga_procurando,
-#             maximo_carregado_formiga = maximo_carregado_formiga,
-#             id_cenario=id_cenario
-#         )
-#     )
-#     engine.execute(update_antihill)
