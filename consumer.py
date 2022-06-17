@@ -3,40 +3,43 @@ from tracemalloc import start
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Back, Style
+from celery.signals import worker_process_init, worker_process_shutdown
 
 from billiard import current_process
 
 def print_blue(text:str):
     print(Fore.BLUE + str(text)+ Style.RESET_ALL)
 
-
-
 #### DATABASE POSTGRES CONNECTION
-# database_type = "postgresql"
-# user_database = "ympevcvwzchqwr"
-# password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-# hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
-# port = "5432"
-# database_name = "d6rl9e5tvp50sh"
-
-
-#### DATABASE MYSQL CONNECTION
 database_type = "postgresql"
-user_database = "postgres"
-password  = "1234"
-hostname = "localhost"
+user_database = "ympevcvwzchqwr"
+password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
 port = "5432"
-database_name = "ants"
-engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
-meta = MetaData(bind=engine)
-MetaData.reflect(meta)
+database_name = "d6rl9e5tvp50sh"
+
+
+#### DATABASE POSTGRESS LOCAL CONNECTION
+# database_type = "postgresql"
+# user_database = "postgres"
+# password  = "1234"
+# hostname = "localhost"
+# port = "5432"
+# database_name = "ants"
 
 
 
 #%%
 app = Celery('tasks', broker='amqp://localhost')
 
-
+@worker_process_init.connect
+def init_worker(**kwargs):
+    global engine
+    global meta
+    engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
+    meta = MetaData(bind=engine)
+    MetaData.reflect(meta)
+    print_blue("Comecei")
 
 def insert_scenario(id:int,ants_quantity:int,total_food:int,map_food:int,elapsed:float,status:str)-> int:
      scenario = meta.tables['scenario']
