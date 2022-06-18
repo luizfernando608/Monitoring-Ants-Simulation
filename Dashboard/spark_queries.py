@@ -217,23 +217,3 @@ def list_scenarios():
 
 
 
-
-
-
-
-
-
-# df_ants = ps.DataFrame(df_ants)
-# df_antihills = ps.DataFrame(df_antihills)
-# df_scenarios = ps.DataFrame(df_scenarios)
-# df_scenarios_antihill = df_scenarios.merge(df_antihills,left_on='id',right_on='scenario_id')
-# df_scenarios_antihill =  df_scenarios_antihill.drop("id_x",axis=1)
-# df_scenarios_antihill.rename(columns={"id_y":"anthill_id"},inplace=True)
-# df_total = df_scenarios_antihill.merge(df_ants,left_on=['scenario_id',"anthill_id"],right_on=['scenario_id',"anthill_id"])
-
-
-# df_total.rename(
-#     columns={"total_food_x":"total_food_map","total_food_y":"total_food_ants",
-#             "status_y":"status_ants","status_x":"status_scenario"}, inplace=True)
-
-#%%
