@@ -1,0 +1,4 @@
+pip install pyspark
+
+sudo apt-get install java-jdk
+
