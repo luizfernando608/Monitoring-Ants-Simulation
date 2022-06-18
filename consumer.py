@@ -51,11 +51,9 @@ def insert_scenario(id:int,ants_quantity:int,total_food:int,map_food:int,elapsed
              total_food=total_food,
              map_food=map_food,
              elapsed=elapsed,
-             status=status
-         )
-     )
+             status=status))
      
-     id_scenario = engine.execute(id)
+     engine.execute(insert_scenario)
      return True
 
 def insert_anthill(food_quantity:int,scenario_id:str, id=str)->bool:
@@ -150,38 +148,35 @@ def does_scenario_exists(id_scenario:str, meta)->bool:
 
 @app.task
 def publish_data(data:dict):
-    
     # VERIFY IF EXIST SCENARIO
     scenario_exist = does_scenario_exists(data['id_scenario_instance'], meta)
     print_red("scenario_exist: " + str(scenario_exist))
     if not scenario_exist:
-        print("publish data")
-        
-        insert_scenario(
-                        id = data['id_scenario_instance'],
+        insert_scenario(id = data['id_scenario_instance'],
                         ants_quantity = len(data['ants_info']), 
                         total_food = data['total_food'], 
                         map_food = data['map_food'], 
                         elapsed = data['elapsed'],
-                        status=0) 
-    
-        insert_anthill(
-                        id ="A",
-                        food_quantity = data['anthill_food'], 
-                        scenario_id = data['id_scenario_instance'])
+                        status=0)
+
+        print_red("Foi até scenario")
+        insert_anthill(id ="A",
+                       food_quantity = data['anthill_food'], 
+                       scenario_id = data['id_scenario_instance'])
+
+        print("Foi até anthill")
 
         for i in range(len(data['ants_info'])):
             ant = data['ants_info'][i]
-            insert_ant( 
-                        id=i,
+            insert_ant( id=i,
                         scenario_id=data['id_scenario_instance'],
                         status=ant['status'], 
                         total_food=ant['total_food'], 
                         anthill_id= "A")
         
-
+        print_red("Foi até ant")
+        
     else:
-        print("update data")
         print("update scenario")
         update_scenario(
                         id=data["id_scenario_instance"],
