@@ -368,7 +368,7 @@ class SimulationServer():
 
     def RunSimulation(self):    
         
-        while self.mapa.anthill_food <= self.NUM_FORMIGAS*300:
+        while self.mapa.anthill_food <= self.NUM_FORMIGAS*10:
         # for i in range(1000):
             ants_report = []
 
@@ -376,10 +376,10 @@ class SimulationServer():
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
             
-            sleep(0.01)
-
-            self.publish(ants_info=ants_report, status="executing")
+            # sleep(0.01)
             
+            self.publish(ants_info=ants_report, status="executing")
+            # break
         self.publish(status="end", ants_info=ants_report)
         
 
@@ -395,6 +395,7 @@ while True:
     count += 1
     sleep(0.1)
     print(count)
+    break
     if count > 0:
         break
 
