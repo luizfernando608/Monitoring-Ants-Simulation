@@ -43,14 +43,14 @@ df_scenarios = spark.read \
     .option("driver", "org.postgresql.Driver") \
     .load()
     
-df_scenarios.show()
+
 #%%
 df_ants.createOrReplaceTempView("ant")
 df_antihills.createOrReplaceTempView("anthill")
 df_scenarios.createOrReplaceTempView("scenario")
-# Information to get about simulation:
-#%%
-# Número total de cenários.
+
+
+
 def num_scenarios():
     result = spark.sql("""select count(*) from scenario""").first()[0]
     return result
@@ -219,37 +219,8 @@ def list_scenarios():
 
 
 
-# num_ants_by_anthill("214e6696-f88f-4930-87da-c544851286f2")
-# def num_ants_carrying_anthill_scenario(id_scenario,id_anthill):
-#     """Número de formigas de um formigueiro carregando comida no cenario"""
-#     return spark.sql(
-#     f"""select count(*)
-#         from ant 
-#         where scenario_id = '{id_scenario}' and anthill_id = '{id_anthill}' and status = '2'""").first()[0]
 
 
-# elapsed_scenario("952b8346-067b-4c1c-a505-c43035a1b152")
-
-
-
-
-# df_antihills = spark.read \
-#     .format("jdbc") \
-#     .option("url", f"jdbc:postgresql://{hostname}:5432/{database_name}") \
-#     .option("dbtable", "anthill") \+
-#     .option("user", user_database) \
-#     .option("password", password) \
-#     .option("driver", "org.postgresql.Driver") \
-#     .load()
-
-# df_scenarios = spark.read \
-#     .format("jdbc") \
-#     .option("url", f"jdbc:postgresql://{hostname}:5432/{database_name}") \
-#     .option("dbtable", "scenario") \
-#     .option("user", user_database) \
-#     .option("password", password) \
-#     .option("driver", "org.postgresql.Driver") \
-#     .load()
 
 
 # df_ants = ps.DataFrame(df_ants)
