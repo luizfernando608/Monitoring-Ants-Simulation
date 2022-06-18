@@ -164,11 +164,11 @@ def publish_data(data:dict):
 
         for i in range(len(data['ants_info'])):
             ant = data['ants_info'][i]
-            id_ant = insert_ant( 
-                            id=i,
-                            scenario_id=data['id_scenario_instance'],
-                            status=ant['status'], 
-                            total_food=ant['total_food'], 
+            insert_ant( 
+                        id=i,
+                        scenario_id=data['id_scenario_instance'],
+                        status=ant['status'], 
+                        total_food=ant['total_food'], 
                             anthill_id= "A")
             
 
