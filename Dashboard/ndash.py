@@ -1,5 +1,6 @@
 #NewDash
 import streamlit as st
+
 st.set_page_config(page_title='Formiguinhas',
                    page_icon='https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/313/ant_1f41c.png',
                    layout="wide")

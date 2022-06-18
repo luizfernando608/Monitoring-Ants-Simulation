@@ -24,3 +24,6 @@ The pipeline flow was modeled as:
 The database relational schema is:
 
 ![](Models/relacional.png)
+
+## Executing the Pipeline
+

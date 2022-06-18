@@ -1,14 +1,13 @@
 """
-Ants Simulation in Python
+Generates te ants simulation and sent messages to the publisher
 """
 import random
 import numpy as np
-from colorama import Fore, Back, Style
 from time import time, sleep
 from consumer import publish_data
 import uuid
 
-#%%
+
 class Pheromone:
     def __init__(self, food_position, label_antihill, life_time = 20,):
         self.default_life_time = life_time
@@ -257,7 +256,6 @@ class Ant():
             return 
 
         self.move_target(self.food_position[0], self.food_position[1], inverse_order=True)
-        # self.check_position()
         
         if (self.y_pos == self.food_position[0] and self.x_pos == self.food_position[1]):
             if (self.map.map[self.y_pos,self.x_pos]=="F"):
@@ -322,7 +320,6 @@ class SimulationServer():
         print("Start new simulatio")
         self.id_scenario_instance= str(uuid.uuid4())
         
-        
     
     def StartScenario(self ):
         self.mapa = Map()
@@ -357,7 +354,6 @@ class SimulationServer():
                     anthill_food = self.mapa.anthill_food,
                     ants_info = ants_info)
 
-        # publish_data(self.data)
         try:
             publish_data.delay(self.data)
         except:
@@ -368,18 +364,16 @@ class SimulationServer():
 
     def RunSimulation(self):    
         
-        while self.mapa.anthill_food <= self.NUM_FORMIGAS*10:
-        # for i in range(1000):
+        while self.mapa.anthill_food <= self.NUM_FORMIGAS*500:
             ants_report = []
 
             for formiga in self.formigas:
                 formiga.routine()
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
-            
-            # sleep(0.01)
+        
             
             self.publish(ants_info=ants_report, status="executing")
-            # break
+    
         self.publish(status="end", ants_info=ants_report)
         
 
@@ -395,8 +389,5 @@ while True:
     count += 1
     sleep(0.1)
     print(count)
-    break
-    if count > 0:
-        break
 
-print("Total time: ", time() - start_time)
+# print("Total time: ", time() - start_time)

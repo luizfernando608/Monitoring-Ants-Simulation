@@ -3,10 +3,9 @@ Ants Simulation in Python
 """
 import random
 import numpy as np
-from colorama import Fore, Back, Style
-from time import time, sleep
-from rpc_files import scenario_pb2_grpc
-import rpc_files.scenario_pb2 as pb
+from time import time
+import scenario_pb2_grpc
+import scenario_pb2 as pb
 import grpc
 from concurrent import futures
 

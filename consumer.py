@@ -1,11 +1,8 @@
 #%%
-from tracemalloc import start
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
-from colorama import Fore, Back, Style
-from celery.signals import worker_process_init, worker_init
-
-from billiard import current_process
+from colorama import Fore, Style
+from celery.signals import worker_init
 
 def print_red(text:str):
     print(Fore.RED + str(text)+ Style.RESET_ALL)
@@ -17,7 +14,6 @@ password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
 hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
 port = "5432"
 database_name = "d6rl9e5tvp50sh"
-
 
 #### DATABASE POSTGRESS LOCAL CONNECTION
 # database_type = "postgresql"
@@ -31,7 +27,7 @@ database_name = "d6rl9e5tvp50sh"
 #%%
 app = Celery('tasks', broker='amqp://localhost')
 
-# @worker_process_init.connect
+
 @worker_init.connect
 def init_worker(**kwargs):
     global engine
@@ -154,6 +150,7 @@ def does_scenario_exists(id_scenario:str, meta)->bool:
 
 @app.task
 def publish_data(data:dict):
+    
     # VERIFY IF EXIST SCENARIO
     scenario_exist = does_scenario_exists(data['id_scenario_instance'], meta)
     print_red("scenario_exist: " + str(scenario_exist))

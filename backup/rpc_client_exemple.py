@@ -1,6 +1,6 @@
 import grpc
-import rpc_files.scenario_pb2 as pb
-import rpc_files.scenario_pb2_grpc as grp
+import scenario_pb2 as pb
+import scenario_pb2_grpc as grp
 
 
 with grpc.insecure_channel('localhost:50051') as channel:

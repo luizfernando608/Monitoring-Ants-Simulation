@@ -42,6 +42,7 @@ df_scenarios = spark.read \
     .option("password", password) \
     .option("driver", "org.postgresql.Driver") \
     .load()
+    
 df_scenarios.show()
 #%%
 df_ants.createOrReplaceTempView("ant")

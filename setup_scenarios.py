@@ -19,8 +19,6 @@ def myfunc(argv):
     
     return num_processes
 
-
-
 num_scenarios = myfunc(sys.argv)
 
 if name == "nt":
