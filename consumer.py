@@ -3,12 +3,12 @@ from tracemalloc import start
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Back, Style
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import worker_process_init, worker_init
 
 from billiard import current_process
 
-def print_blue(text:str):
-    print(Fore.BLUE + str(text)+ Style.RESET_ALL)
+def print_red(text:str):
+    print(Fore.RED + str(text)+ Style.RESET_ALL)
 
 #### DATABASE POSTGRES CONNECTION
 database_type = "postgresql"
@@ -28,18 +28,22 @@ database_name = "d6rl9e5tvp50sh"
 # database_name = "ants"
 
 
-
 #%%
 app = Celery('tasks', broker='amqp://localhost')
 
-@worker_process_init.connect
+# @worker_process_init.connect
+@worker_init.connect
 def init_worker(**kwargs):
     global engine
     global meta
     engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
     meta = MetaData(bind=engine)
     MetaData.reflect(meta)
-    print_blue("Comecei")
+    print_red("Comecei")
+
+# engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
+# meta = MetaData(bind=engine)
+# MetaData.reflect(meta)
 
 def insert_scenario(id:int,ants_quantity:int,total_food:int,map_food:int,elapsed:float,status:str)-> int:
      scenario = meta.tables['scenario']
@@ -67,9 +71,9 @@ def insert_anthill(food_quantity:int,scenario_id:str, id=str)->bool:
             food_quantity=food_quantity,
             scenario_id=scenario_id
         )
-    ).returning(anthill.c.id)
-    id_anthill = engine.execute(insert_anthill)
-    return id_anthill.fetchone()[0]
+    )
+    engine.execute(insert_anthill)
+    return True
 
 
 def insert_ant(id, status:int,total_food:int,anthill_id:str,scenario_id)->bool:
@@ -83,10 +87,10 @@ def insert_ant(id, status:int,total_food:int,anthill_id:str,scenario_id)->bool:
             status=status,
             total_food=total_food
         )    
-    ).returning(ant.c.id)
+    )
 
-    id_ant = engine.execute(insert_ant)
-    return id_ant.fetchone()[0]
+    engine.execute(insert_ant)
+    return True
 
 def update_scenario(id:str,total_food:int,map_food:int,elapsed:float,status:str,ants_quantity:int)-> bool:
     scenario = meta.tables["scenario"]
@@ -137,18 +141,25 @@ def update_ants(ants_info:list, scenario_id:str):
                     total_food = ant['total_food']))
         
         conn.execute(update_ant)
-        
+    return True
+
+def does_scenario_exists(id_scenario:str, meta)->bool:
+    scenario_instance = meta.tables['scenario']
+    scenario_instance_query = (select([scenario_instance.c.id]).where(scenario_instance.c.id == id_scenario))
+    ids_scenario_instance = engine.execute(scenario_instance_query).fetchall()
+    if len(ids_scenario_instance) == 0:
+        return False
+    else:
+        return True
 
 @app.task
 def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
-    scenario_instance = meta.tables['scenario']
-    scenario_instance_query = (select([scenario_instance.c.id]).where(scenario_instance.c.id == data['id_scenario_instance']))
-    ids_scenario_instance = engine.execute(scenario_instance_query).fetchall()
-    
-    print_blue(ids_scenario_instance)
-    if len(ids_scenario_instance) == 0:
+    scenario_exist = does_scenario_exists(data['id_scenario_instance'], meta)
+    print_red("scenario_exist: " + str(scenario_exist))
+    if not scenario_exist:
         print("publish data")
+        
         insert_scenario(
                         id = data['id_scenario_instance'],
                         ants_quantity = len(data['ants_info']), 
@@ -156,7 +167,7 @@ def publish_data(data:dict):
                         map_food = data['map_food'], 
                         elapsed = data['elapsed'],
                         status=0) 
-
+    
         insert_anthill(
                         id ="A",
                         food_quantity = data['anthill_food'], 
@@ -169,8 +180,8 @@ def publish_data(data:dict):
                         scenario_id=data['id_scenario_instance'],
                         status=ant['status'], 
                         total_food=ant['total_food'], 
-                            anthill_id= "A")
-            
+                        anthill_id= "A")
+        
 
     else:
         print("update data")
