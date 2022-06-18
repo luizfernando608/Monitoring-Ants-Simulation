@@ -57,10 +57,10 @@ def insert_scenario(id:int,ants_quantity:int,total_food:int,map_food:int,elapsed
              elapsed=elapsed,
              status=status
          )
-     ).returning(scenario.c.id)
+     )
      
-     id_scenario = engine.execute(insert_scenario)
-     return id_scenario.fetchone()[0]
+     id_scenario = engine.execute(id)
+     return True
 
 def insert_anthill(food_quantity:int,scenario_id:str, id=str)->bool:
     anthill = meta.tables['anthill']
