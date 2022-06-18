@@ -1,5 +1,4 @@
 #%%
-from operator import rshift
 from unittest import result
 import pyspark.pandas as ps
 from pyspark.sql import SparkSession
@@ -61,29 +60,29 @@ def num_antihills():
     result = spark.sql("""select count(*) from anthill""").first()[0]
     return result
 
-# Numero de formigas
+
 def num_ants():
     """Numero de formigas"""
     result = spark.sql("""select count(*) from ant""").first()[0]
     return result
 
 
-def num_carrying():
+def num_ants_carrying():
     """Numero carregando comida"""
     return spark.sql("select count(*) from ant where ant.status='2'").first()[0]
 
 
-def num_looking_for_food():
+def num_ants_looking_for_food():
     """Numero procurando comida"""
-    return spark.sql("select count(*) from ant where ant.status!='0'").first()[0]
+    return spark.sql("select count(*) from ant where ant.status!='2'").first()[0]
 
 def rate_carrying():
     """Percentual de formigas procurando comida."""
-    return num_carrying()/num_ants()
+    return num_ants_carrying()/num_ants()
 
 def rate_looking_for_food():
     """Percentual de formigas carregando comida."""
-    return num_looking_for_food()/num_ants()
+    return num_ants_looking_for_food()/num_ants()
 
 def total_food():
     """Total de comida em todos os cenários"""
@@ -124,7 +123,6 @@ def scenario_min_elapsed():
 
 def scenario_max_elapsed():
     """identificador e o tempo de execução do cenário que teve maior tempo deduração"""
-    # select id from scenario where elapsed = (select max(elapsed) from scenario);
     id,elapsed = spark.sql("select id,elapsed from scenario where elapsed = (select max(elapsed) from scenario)").first()[:]
     return id, elapsed
 
@@ -157,50 +155,64 @@ def elapsed_scenario(id):
     """Tempo de execução do cenário"""
     return spark.sql(f"select elapsed from scenario where id = '{id}'").first()[0]
 
-
+#%%
 
 def num_ants_by_anthill(id_scenario):
     """Número de formigas por formigueiro"""
-    return spark.sql(
+    results = spark.sql(
     f"""select anthill_id, count(*)
         from ant a
         where scenario_id = '{id_scenario}'
-        group by anthill_id ;""").collect()
+        group by anthill_id""").collect()
+    return [tuple(i.asDict().values()) for i in results]
+        
 
+
+#%%
 def num_ants_carrying_by_anthill(id_scenario):
     "Número de formigas carregando comida por formigueiro"
-    return spark.sql(
+    results = spark.sql(
     f"""select anthill_id, count(*)
         from ant a
         where scenario_id = '{id_scenario}'
         and a.status = '2'
         group by anthill_id ;""").collect()
+    return [tuple(i.asDict().values()) for i in results]
 
 def num_ants_looking_for_food_by_anthill(id_scenario):
     "Número de formigas procurando comida por formigueiro"
-    return spark.sql(
+    result= spark.sql(
     f"""select anthill_id, count(*)
         from ant a
         where scenario_id = '{id_scenario}'
-        and a.status != '0'
+        and a.status != '2'
         group by anthill_id ;""").collect()
+    return [tuple(i.asDict().values()) for i in result]
+
 
 def total_food_by_anthill(id_scenario):
     "Total de comida no formigueiro"
-    return spark.sql(
+    results= spark.sql(
     f"""select id, sum(food_quantity)
         from anthill a
         where scenario_id = '{id_scenario}'
         group by id ;""").collect()
+    return [tuple(i.asDict().values()) for i in results]
 
 def total_food_carrying_by_anthill(id_scenario):
     "Total de comida sendo carregada para o formigueiro"
-    return spark.sql(
+    results= spark.sql(
     f"""select anthill_id, count(*)
         from ant a
         where scenario_id = '{id_scenario}'
         and a.status = '2'
         group by anthill_id ;""").collect()
+    return [tuple(i.asDict().values()) for i in results]
+
+def list_scenarios():
+    results = spark.sql(f"""select id from scenario""").collect()
+    return [i[0] for i in results]
+    
 
 
 
