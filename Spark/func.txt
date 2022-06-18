@@ -1,0 +1,48 @@
+//contar cenario
+select count(*) from scenario;
+
+// contar formigueiros
+ select count(*) from anthill;
+
+// contar formigas
+select count(*) from ant;
+
+//carregando
+select count(*) from ant where ant.status='2' ;
+
+//procurando
+select count(*) from ant where ant.status!='2' ;
+
+// Comida
+select sum(s.total_food) from scenario s ;
+
+// Na fonte
+select sum(s.map_food) from scenario s;
+
+// Formigueiro
+select sum(a.food_quantity) from anthill a;
+
+//Transito
+select count(*) from ant where ant.status='2' ;
+
+//Tempo Execução
+// max
+select max(elapsed) from scenario;
+// identificar
+select id from scenario where elapsed = (select max(elapsed) from scenario);
+
+// min
+select min(elapsed) from scenario;
+// identificar
+select id from scenario where elapsed = (select min(elapsed) from scenario);
+
+// avg
+select avg(elapsed) from scenario s;
+
+//Formigas
+//max
+select max(total_food) from ant;
+
+//avg
+select avg(total_food) from ant;
+
