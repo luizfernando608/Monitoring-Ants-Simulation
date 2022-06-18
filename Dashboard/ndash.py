@@ -1,7 +1,7 @@
 #NewDash
 import streamlit as st
 import pandas as pd
-
+from spark_queries import *
 
 NFormigas = 10
 NFCarregando = 5
