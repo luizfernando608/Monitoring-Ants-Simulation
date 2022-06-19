@@ -1,6 +1,6 @@
 #%%
 import celery
-from sqlalchemy import MetaData, and_, create_engine_database, update, insert, select
+from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
 from celery.signals import worker_init, after_task_publish, task_postrun, task_prerun, worker_shutdown
@@ -22,7 +22,7 @@ def init_worker(**kwargs):
     print_red("Worker initialized")
     global engine_database
     global meta
-    engine_database = create_engine_database(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
+    engine_database = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
     meta = MetaData(bind=engine_database)
     MetaData.reflect(meta)
     print_red("Comecei")
