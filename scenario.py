@@ -6,7 +6,10 @@ import numpy as np
 from time import time, sleep
 from consumer import publish_data
 import uuid
+from colorama import Fore, Style
 
+def print_blue(text:str):
+    print(Fore.BLUE + str(text)+ Style.RESET_ALL)
 
 class Pheromone:
     def __init__(self, food_position, label_antihill, life_time = 20,):
@@ -363,8 +366,9 @@ class SimulationServer():
 
 
     def RunSimulation(self):    
-        
-        while self.mapa.anthill_food <= self.NUM_FORMIGAS*500:
+        count = 0
+        # while self.mapa.anthill_food <= self.NUM_FORMIGAS*30:
+        for i in range(5000):
             ants_report = []
 
             for formiga in self.formigas:
@@ -372,23 +376,25 @@ class SimulationServer():
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
         
             
-            self.publish(ants_info=ants_report, status="executing")
-    
+            count+=1
+            if count%10 == 0:
+                self.publish(ants_info=ants_report, status="executing")
+
+        
+
         self.publish(status="end", ants_info=ants_report)
+        
         
 
 #%%
-count = 0
+
+
 start_time = time()
-while True:
-    simulation = SimulationServer()
-    simulation.StartScenario()
-    print("Scenario started")
-    simulation.RunSimulation()
-    print("Scenario ended")
-    count += 1
-    sleep(0.1)
-    print(count)
-    
+print_blue(start_time)
+simulation = SimulationServer()
+simulation.StartScenario()
+print("Scenario started")
+simulation.RunSimulation()
+print("Scenario ended")
 
 # print("Total time: ", time() - start_time)
