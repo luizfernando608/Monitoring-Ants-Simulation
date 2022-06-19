@@ -1,20 +1,22 @@
 #%%
 from unittest import result
-import pyspark.pandas as ps
-from pyspark.sql import SparkSession
+from pyspark.context import SparkContext
+from pyspark.sql import SparkSession, SQLContext
 
 spark = SparkSession \
     .builder \
     .appName("Python Spark SQL basic example") \
     .config("spark.jars", "../postgresql-42.2.6.jar") \
+    .config('spark.newSession().sql.shuffle.partitions', '10') \
     .getOrCreate()
 
 database_type = "postgresql"
-user_database = "ympevcvwzchqwr"
-password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+user_database = "root"#"ympevcvwzchqwr"
+password  = "root"#"34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+hostname = "127.0.0.1"#"ec2-34-198-186-145.compute-1.amazonaws.com"
 port = "5432"
-database_name = "d6rl9e5tvp50sh"
+database_name = "test_ants"#"d6rl9e5tvp50sh"
+
 
 df_ants = spark.read \
     .format("jdbc") \
@@ -45,37 +47,38 @@ df_scenarios = spark.read \
     
 
 #%%
-df_ants.createOrReplaceTempView("ant")
-df_antihills.createOrReplaceTempView("anthill")
-df_scenarios.createOrReplaceTempView("scenario")
+df_ants.createGlobalTempView("ant")
+df_antihills.createGlobalTempView("anthill")
+df_scenarios.createGlobalTempView("scenario")
 
+spark.sql
 
 
 def num_scenarios():
-    result = spark.sql("""select count(*) from scenario""").first()[0]
+    result = spark.newSession().sql("""select count(*) from global_temp.scenario""").first()[0]
     return result
 
 
 def num_antihills():
     """Numero de formigueiros"""
-    result = spark.sql("""select count(*) from anthill""").first()[0]
+    result = spark.newSession().sql("""select count(*) from global_temp.anthill""").first()[0]
     return result
 
 
 def num_ants():
     """Numero de formigas"""
-    result = spark.sql("""select count(*) from ant""").first()[0]
+    result = spark.newSession().sql("""select count(*) from global_temp.ant""").first()[0]
     return result
 
 
 def num_ants_carrying():
     """Numero carregando comida"""
-    return spark.sql("select count(*) from ant where ant.status='2'").first()[0]
+    return spark.newSession().sql("select count(*) from global_temp.ant where ant.status='2'").first()[0]
 
 
 def num_ants_looking_for_food():
     """Numero procurando comida"""
-    return spark.sql("select count(*) from ant where ant.status!='2'").first()[0]
+    return spark.newSession().sql("select count(*) from global_temp.ant where ant.status!='2'").first()[0]
 
 def rate_carrying():
     """Percentual de formigas procurando comida."""
@@ -87,18 +90,18 @@ def rate_looking_for_food():
 
 def total_food():
     """Total de comida em todos os cenários"""
-    return spark.sql("select sum(total_food) from scenario").first()[0]
+    return spark.newSession().sql("select sum(total_food) from global_temp.scenario").first()[0]
 
 def total_source_food():
     """Total de comida na fonte"""
-    return spark.sql("select sum(s.map_food) from scenario s").first()[0]
+    return spark.newSession().sql("select sum(s.map_food) from global_temp.scenario s").first()[0]
 
 def total_food_carrying():
     """Total comida sendo carregada"""
-    return spark.sql("select count(*) from ant where ant.status='2'").first()[0]
+    return spark.newSession().sql("select count(*) from global_temp.ant where ant.status='2'").first()[0]
 
 def total_food_anthill():
-    return spark.sql("select sum(a.food_quantity) from anthill a").first()[0]
+    return spark.newSession().sql("select sum(a.food_quantity) from global_temp.anthill a").first()[0]
 
 def rate_source_food():
     """Percentual de comida na fonte"""
@@ -115,26 +118,26 @@ def rate_food_anthill():
 
 def avg_elapsed_time():
     """tempo medio de execução de um cenário"""
-    return spark.sql("select avg(elapsed) from scenario").first()[0]
+    return spark.newSession().sql("select avg(elapsed) from global_temp.scenario").first()[0]
 
 def scenario_min_elapsed():
     """identificador e o tempo de execução do cenário que teve menor tempo de duração"""
-    id,elapsed = spark.sql("select id,elapsed from scenario where elapsed = (select min(elapsed) from scenario)").first()[:]
+    id,elapsed = spark.sql("select id,elapsed from global_temp.scenario where elapsed = (select min(elapsed) from global_temp.scenario)").first()[:]
     return id, elapsed
 
 def scenario_max_elapsed():
     """identificador e o tempo de execução do cenário que teve maior tempo deduração"""
-    id,elapsed = spark.sql("select id,elapsed from scenario where elapsed = (select max(elapsed) from scenario)").first()[:]
+    id,elapsed = spark.newSession().sql("select id,elapsed from global_temp.scenario where elapsed = (select max(elapsed) from global_temp.scenario)").first()[:]
     return id, elapsed
 
 def ant_max_food():
     """máximo de unidades de comida que uma formiga foi capaz de levarpara o formigueiro"""
-    result = spark.sql("select max(total_food) from ant").first()[0]
+    result = spark.newSession().sql("select max(total_food) from global_temp.ant").first()[0]
     return result
 
 def ant_avg_food():
     """unidades de comida uma formiga leva para o formigueiro em média durante a execução de um cenário"""
-    result = spark.sql("select avg(total_food) from ant").first()[0]
+    result = spark.newSession().sql("select avg(total_food) from global_temp.ant").first()[0]
     return result
 
 #%%
@@ -142,27 +145,27 @@ def ant_avg_food():
 #### QUERIES POR CENÀRIO ####
 def num_anthills_scenario(id):
     """Número de formigueiros no cenário"""
-    return spark.sql(f"select count(*) from anthill where scenario_id = '{id}'").first()[0]
+    return spark.newSession().sql(f"select count(*) from global_temp.anthill where scenario_id = '{id}'").first()[0]
 
 def num_ants_scenario(id):
     """Número de formigas no cenário"""
-    return spark.sql(f"select count(*) from ant where scenario_id = '{id}'").first()[0]
+    return spark.newSession().sql(f"select count(*) from global_temp.ant where scenario_id = '{id}'").first()[0]
 
 def total_food_scenario(id):
     """Total de comida no cenário"""
-    return spark.sql(f"select sum(total_food) from ant where scenario_id = '{id}'").first()[0]
+    return spark.newSession().sql(f"select sum(total_food) from global_temp.ant where scenario_id = '{id}'").first()[0]
 
 def elapsed_scenario(id):
     """Tempo de execução do cenário"""
-    return spark.sql(f"select elapsed from scenario where id = '{id}'").first()[0]
+    return spark.newSession().sql(f"select elapsed from global_temp.scenario where id = '{id}'").first()[0]
 
 #%%
 
 def num_ants_by_anthill(id_scenario):
     """Número de formigas por formigueiro"""
-    results = spark.sql(
+    results = spark.newSession().sql(
     f"""select anthill_id, count(*)
-        from ant a
+        from global_temp.ant a
         where scenario_id = '{id_scenario}'
         group by anthill_id""").collect()
     return [tuple(i.asDict().values()) for i in results]
@@ -172,9 +175,9 @@ def num_ants_by_anthill(id_scenario):
 #%%
 def num_ants_carrying_by_anthill(id_scenario):
     "Número de formigas carregando comida por formigueiro"
-    results = spark.sql(
+    results = spark.newSession().sql(
     f"""select anthill_id, count(*)
-        from ant a
+        from global_temp.ant a
         where scenario_id = '{id_scenario}'
         and a.status = '2'
         group by anthill_id ;""").collect()
@@ -182,9 +185,9 @@ def num_ants_carrying_by_anthill(id_scenario):
 
 def num_ants_looking_for_food_by_anthill(id_scenario):
     "Número de formigas procurando comida por formigueiro"
-    result= spark.sql(
+    result= spark.newSession().sql(
     f"""select anthill_id, count(*)
-        from ant a
+        from global_temp.ant a
         where scenario_id = '{id_scenario}'
         and a.status != '2'
         group by anthill_id ;""").collect()
@@ -193,25 +196,25 @@ def num_ants_looking_for_food_by_anthill(id_scenario):
 
 def total_food_by_anthill(id_scenario):
     "Total de comida no formigueiro"
-    results= spark.sql(
+    results= spark.newSession().sql(
     f"""select id, sum(food_quantity)
-        from anthill a
+        from global_temp.anthill a
         where scenario_id = '{id_scenario}'
         group by id ;""").collect()
     return [tuple(i.asDict().values()) for i in results]
 
 def total_food_carrying_by_anthill(id_scenario):
     "Total de comida sendo carregada para o formigueiro"
-    results= spark.sql(
+    results= spark.newSession().sql(
     f"""select anthill_id, count(*)
-        from ant a
+        from global_temp.ant a
         where scenario_id = '{id_scenario}'
         and a.status = '2'
         group by anthill_id ;""").collect()
     return [tuple(i.asDict().values()) for i in results]
 
 def list_scenarios():
-    results = spark.sql(f"""select id from scenario""").collect()
+    results = spark.newSession().sql(f"""select id from global_temp.scenario""").collect()
     return [i[0] for i in results]
     
 
