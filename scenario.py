@@ -368,7 +368,7 @@ class SimulationServer():
     def RunSimulation(self):    
         count = 0
         # while self.mapa.anthill_food <= self.NUM_FORMIGAS*30:
-        for i in range(5000):
+        for i in range(100):
             ants_report = []
 
             for formiga in self.formigas:
