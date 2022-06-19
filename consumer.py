@@ -16,7 +16,7 @@ app = Celery("tasks", broker=BROKER_URL)
 app.conf.update()
 
 from operational_credentials import *
-#%%/
+engine_database=None
 @worker_init.connect
 def init_worker(**kwargs):
     print_red("Worker initialized")
