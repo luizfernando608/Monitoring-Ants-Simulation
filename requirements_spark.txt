@@ -246,3 +246,4 @@ xkit==0.0.0
 xlrd==2.0.1
 youtube-dl==2020.3.24
 zipp==3.8.0
+psycopg2-binary
