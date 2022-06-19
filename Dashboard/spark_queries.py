@@ -7,13 +7,14 @@ spark = SparkSession \
     .builder \
     .appName("Python Spark SQL basic example") \
     .config("spark.jars", "../postgresql-42.2.6.jar") \
-    .config('spark.newSession().sql.shuffle.partitions', '10') \
+    .config('spark.newSession().sql.shuffle.partitions', '100') \
+    .config("master", "local[8]") \
     .getOrCreate()
 
 database_type = "postgresql"
 user_database = "root"#"ympevcvwzchqwr"
 password  = "root"#"34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "127.0.0.1"#"ec2-34-198-186-145.compute-1.amazonaws.com"
+hostname = "localhost"#"ec2-34-198-186-145.compute-1.amazonaws.com"
 port = "5432"
 database_name = "test_ants"#"d6rl9e5tvp50sh"
 
@@ -122,12 +123,26 @@ def avg_elapsed_time():
 
 def scenario_min_elapsed():
     """identificador e o tempo de execução do cenário que teve menor tempo de duração"""
-    id,elapsed = spark.sql("select id,elapsed from global_temp.scenario where elapsed = (select min(elapsed) from global_temp.scenario)").first()[:]
+    id,elapsed = spark.newSession().sql(
+        """
+        select id, min(elapsed) as elapsed
+        from global_temp.scenario 
+        group by id
+        order by elapsed desc
+        limit 1
+        """).first()[:]
     return id, elapsed
 
 def scenario_max_elapsed():
     """identificador e o tempo de execução do cenário que teve maior tempo deduração"""
-    id,elapsed = spark.newSession().sql("select id,elapsed from global_temp.scenario where elapsed = (select max(elapsed) from global_temp.scenario)").first()[:]
+    id,elapsed = spark.newSession().sql(
+        """
+        select id, max(elapsed) as elapsed
+        from global_temp.scenario 
+        group by id
+        order by elapsed desc
+        limit 1
+        """).first()[:]
     return id, elapsed
 
 def ant_max_food():
