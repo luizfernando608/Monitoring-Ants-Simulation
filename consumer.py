@@ -1,6 +1,6 @@
 #%%
 import celery
-from sqlalchemy import MetaData, and_, create_engine, update, insert, select
+from sqlalchemy import MetaData, and_, create_engine_database, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
 from celery.signals import worker_init, after_task_publish, task_postrun, task_prerun, worker_shutdown
@@ -20,10 +20,10 @@ from operational_credentials import *
 @worker_init.connect
 def init_worker(**kwargs):
     print_red("Worker initialized")
-    global engine
+    global engine_database
     global meta
-    engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
-    meta = MetaData(bind=engine)
+    engine_database = create_engine_database(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
+    meta = MetaData(bind=engine_database)
     MetaData.reflect(meta)
     print_red("Comecei")
 
@@ -41,7 +41,7 @@ def insert_scenario(id:int,ants_quantity:int,total_food:int,map_food:int,elapsed
              elapsed=elapsed,
              status=status))
      
-     engine.execute(insert_scenario)
+     engine_database.execute(insert_scenario)
      return True
 
 def insert_anthill(food_quantity:int,scenario_id:str, id=str)->bool:
@@ -54,7 +54,7 @@ def insert_anthill(food_quantity:int,scenario_id:str, id=str)->bool:
             scenario_id=scenario_id
         )
     )
-    engine.execute(insert_anthill)
+    engine_database.execute(insert_anthill)
     return True
 
 
@@ -71,7 +71,7 @@ def insert_ant(id, status:int,total_food:int,anthill_id:str,scenario_id)->bool:
         )    
     )
 
-    engine.execute(insert_ant)
+    engine_database.execute(insert_ant)
     return True
 
 def update_scenario(id:str,total_food:int,map_food:int,elapsed:float,status:str,ants_quantity:int)-> bool:
@@ -88,7 +88,7 @@ def update_scenario(id:str,total_food:int,map_food:int,elapsed:float,status:str,
              status=status
         )
      )
-    engine.execute(update_scenario_status)
+    engine_database.execute(update_scenario_status)
     return True
 
 def update_antihill(id_scenario:str,food_quantity:int, id_anthill="A")->bool:
@@ -103,13 +103,13 @@ def update_antihill(id_scenario:str,food_quantity:int, id_anthill="A")->bool:
         )
     )
     
-    engine.execute(update_anthill)
+    engine_database.execute(update_anthill)
     return True
 
 
 def update_ants(ants_info:list, scenario_id:str):
     ant_table = meta.tables['ant']
-    with engine.begin() as conn:
+    with engine_database.begin() as conn:
         for i, ant in enumerate(ants_info):    
             update_ant = (
                 update(ant_table).
@@ -126,7 +126,7 @@ def update_ants(ants_info:list, scenario_id:str):
 def does_scenario_exists(id_scenario:str)->bool:
     scenario_instance = meta.tables['scenario']
     scenario_instance_query = (select([scenario_instance.c.id]).where(scenario_instance.c.id == id_scenario))
-    ids_scenario_instance = engine.execute(scenario_instance_query).fetchall()
+    ids_scenario_instance = engine_database.execute(scenario_instance_query).fetchall()
     if len(ids_scenario_instance) == 0:
         return False
     else:
@@ -135,7 +135,7 @@ def does_scenario_exists(id_scenario:str)->bool:
 @app.task
 def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
-    meta = MetaData(bind=engine)
+    meta = MetaData(bind=engine_database)
     MetaData.reflect(meta)
     scenario_exist = does_scenario_exists(data['id_scenario_instance'])
     print_red("scenario_exist: " + str(scenario_exist))
