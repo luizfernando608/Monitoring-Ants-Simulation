@@ -1,8 +1,8 @@
-CREATE TABLE Cenario
+CREATE TABLE scenario
 (
   ID VARCHAR(36) NOT NULL unique,
-  Anthill INT NOT NULL,
-  Ants INT NOT NULL,
+  anthill_id VARCHAR(2) NOT NULL,
+  ants_id SERIAL NOT NULL,
   ants_searching FLOAT NOT NULL,
   ants_carring FLOAT NOT NULL,
   total_food INT NOT NULL,
