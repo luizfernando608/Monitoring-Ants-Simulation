@@ -109,8 +109,6 @@ def update_antihill(id_scenario:str,food_quantity:int, id_anthill="A")->bool:
 
 def update_ants(ants_info:list, scenario_id:str):
     ant_table = meta.tables['ant']
-    anthill_table = meta.tables['anthill']
-    scenario_table = meta.tables['scenario']
     with engine.begin() as conn:
         for i, ant in enumerate(ants_info):    
             update_ant = (
@@ -125,7 +123,7 @@ def update_ants(ants_info:list, scenario_id:str):
         conn.execute(update_ant)
     return True
 
-def does_scenario_exists(id_scenario:str, meta)->bool:
+def does_scenario_exists(id_scenario:str)->bool:
     scenario_instance = meta.tables['scenario']
     scenario_instance_query = (select([scenario_instance.c.id]).where(scenario_instance.c.id == id_scenario))
     ids_scenario_instance = engine.execute(scenario_instance_query).fetchall()
@@ -137,7 +135,9 @@ def does_scenario_exists(id_scenario:str, meta)->bool:
 @app.task
 def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
-    scenario_exist = does_scenario_exists(data['id_scenario_instance'], meta)
+    meta = MetaData(bind=engine)
+    MetaData.reflect(meta)
+    scenario_exist = does_scenario_exists(data['id_scenario_instance'])
     print_red("scenario_exist: " + str(scenario_exist))
     if not scenario_exist:
         insert_scenario(id = data['id_scenario_instance'],
