@@ -3,7 +3,7 @@ import celery
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
-from celery.signals import worker_init, after_task_publish, task_postrun, task_prerun, worker_shutdown
+from celery.signals import worker_init
 
 def print_red(text:str):
     print(Fore.BLUE + str(text)+ Style.RESET_ALL)
@@ -16,7 +16,7 @@ app = Celery("tasks", broker=BROKER_URL)
 app.conf.update()
 
 from operational_credentials import *
-engine_database=None
+
 @worker_init.connect
 def init_worker(**kwargs):
     print_red("Worker initialized")
@@ -135,6 +135,7 @@ def does_scenario_exists(id_scenario:str)->bool:
 @app.task
 def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
+    engine_database = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
     meta = MetaData(bind=engine_database)
     MetaData.reflect(meta)
     scenario_exist = does_scenario_exists(data['id_scenario_instance'])
