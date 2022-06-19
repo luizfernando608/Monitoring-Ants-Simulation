@@ -1,5 +1,6 @@
 #NewDash
 import streamlit as st
+from time import sleep
 
 st.set_page_config(page_title='Formiguinhas',
                    page_icon='https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/313/ant_1f41c.png',
@@ -7,7 +8,6 @@ st.set_page_config(page_title='Formiguinhas',
 
 import pandas as pd
 from spark_queries import *
-
 
 NFormigas = num_ants()
 NFCarregando = num_ants_carrying()
@@ -31,9 +31,6 @@ MediaCarregado = round(ant_avg_food(),3)
 
 mapa = {'cenario1':{'NFormigueiro':1,'NFormigas':5,'NFC':3,'NFP':2,'NComida':5,'NCFon':2,'NCFor':0,
                     'Tempo':10,'form_describe':[{'NFormigas':5,'NFC':3,'NFP':2,'NCFor':0}]}}
-
-
-
 
 a = st.expander('Dados Primários')
 
@@ -68,6 +65,7 @@ b5.metric('Média de comida carregada',MediaCarregado)
 
 
 c = st.expander('Qual cenário quer observar?')
+
 # scenarios_data = {}
 # for seletor in list_scenarios():
 #     scenario_data = {}
@@ -117,3 +115,8 @@ if seletor !='':
         c2.write(f"- % Formigueiro: {total_food_by_anthill(seletor)[i][1]/(total_food_A)*100} %")
         c2.write(f"- % Transito: {carrying/(total_food_A)*100} %")
         c3.metric('Probabilidade',str((total_food_A)/total_food_scenario(seletor)*100) +' %')
+
+
+# automatically rerun after 30s
+sleep(30)
+st.experimental_rerun()
