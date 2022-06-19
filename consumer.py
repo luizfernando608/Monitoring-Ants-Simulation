@@ -1,4 +1,5 @@
 #%%
+import celery
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
@@ -9,13 +10,13 @@ def print_red(text:str):
 
 
 #%%
-app = Celery("tasks")
-app.broker_connection('amqps://b-ee432138-0b79-4f52-885d-19d4d18361d7.mq.us-east-1.amazonaws.com:5671',
-                      userid="allc", password='formigueiro123')
-
+from broker_credentials import *
+BROKER_URL=f"{transport}://{userid}:{password}@{hostname}:{port}/"
+app = Celery("tasks", broker=BROKER_URL)
+app.conf.update()
 
 from operational_credentials import *
-#%%
+#%%/
 @worker_init.connect
 def init_worker(**kwargs):
     print_red("Worker initialized")
