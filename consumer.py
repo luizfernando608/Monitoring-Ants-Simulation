@@ -4,21 +4,32 @@ from celery import Celery
 from colorama import Fore, Style
 from celery.signals import worker_init, after_task_publish, task_postrun, task_prerun, worker_shutdown
 from time import time
+
 def print_red(text:str):
     print(Fore.BLUE + str(text)+ Style.RESET_ALL)
 
 #### DATABASE POSTGRES CONNECTION
-database_type = "postgresql"
-user_database = "root"#"ympevcvwzchqwr"
-password  = "root"#"34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "localhost"#"ec2-34-198-186-145.compute-1.amazonaws.com"
-port = "5432"
-database_name = "test_ants"#"d6rl9e5tvp50sh"
+# database_type = "postgresql"
+# user_database = "root"#"ympevcvwzchqwr"
+# password  = "root"#"34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+# hostname = "localhost"#"ec2-34-198-186-145.compute-1.amazonaws.com"
+# port = "5432"
+# database_name = "test_ants"#"d6rl9e5tvp50sh"
 
+database_type = "postgresql"
+user_database = "ympevcvwzchqwr"
+password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+port = "5432"
+database_name = "d6rl9e5tvp50sh"
 
 
 #%%
-app = Celery('tasks', broker='amqp://localhost')
+# app = Celery('tasks', broker='amqp://localhost')
+# app = Celery('tasks', broker='amqps://b-ee432138-0b79-4f52-885d-19d4d18361d7.mq.us-east-1.amazonaws.com:5671')
+app = Celery("tasks")
+app.broker_connection('amqps://b-ee432138-0b79-4f52-885d-19d4d18361d7.mq.us-east-1.amazonaws.com:5671',
+                      userid="allc", password='formigueiro123')
 # app.control.purge()
 # app.on_after_finalize
 # rabbit_queue = channel.queue_declare(queue="task_queue", durable=True, passive=True)
