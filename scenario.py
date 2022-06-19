@@ -376,8 +376,7 @@ class SimulationServer():
                 ants_report.append({"status":formiga.status, "total_food":formiga.total_food})
         
             
-            count+=1
-            if count%10 == 0:
+            if i%10 == 0:
                 self.publish(ants_info=ants_report, status="executing")
 
         
