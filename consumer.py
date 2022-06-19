@@ -9,11 +9,11 @@ def print_red(text:str):
 
 #### DATABASE POSTGRES CONNECTION
 database_type = "postgresql"
-user_database = "ympevcvwzchqwr"
-password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+user_database = "root"#"ympevcvwzchqwr"
+password  = "root"#"34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+hostname = "localhost"#"ec2-34-198-186-145.compute-1.amazonaws.com"
 port = "5432"
-database_name = "d6rl9e5tvp50sh"
+database_name = "test_ants"#"d6rl9e5tvp50sh"
 
 #### DATABASE POSTGRESS LOCAL CONNECTION
 # database_type = "postgresql"
