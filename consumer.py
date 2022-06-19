@@ -13,6 +13,8 @@ app = Celery("tasks")
 app.broker_connection('amqps://b-ee432138-0b79-4f52-885d-19d4d18361d7.mq.us-east-1.amazonaws.com:5671',
                       userid="allc", password='formigueiro123')
 
+
+from operational_credentials import *
 #%%
 @worker_init.connect
 def init_worker(**kwargs):
