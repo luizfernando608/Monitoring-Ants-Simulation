@@ -2,32 +2,29 @@
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
-from celery.signals import worker_init
-
+from celery.signals import worker_init, after_task_publish, task_postrun, task_prerun, worker_shutdown
+from time import time
 def print_red(text:str):
-    print(Fore.RED + str(text)+ Style.RESET_ALL)
+    print(Fore.BLUE + str(text)+ Style.RESET_ALL)
 
 #### DATABASE POSTGRES CONNECTION
 database_type = "postgresql"
-user_database = "ympevcvwzchqwr"
-password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+user_database = "root"
+password  = "root"
+hostname = "localhost"
 port = "5432"
-database_name = "d6rl9e5tvp50sh"
+database_name = "test_db"
 
-#### DATABASE POSTGRESS LOCAL CONNECTION
-# database_type = "postgresql"
-# user_database = "postgres"
-# password  = "1234"
-# hostname = "localhost"
-# port = "5432"
-# database_name = "ants"
 
 
 #%%
 app = Celery('tasks', broker='amqp://localhost')
+# app.control.purge()
+# app.on_after_finalize
+# rabbit_queue = channel.queue_declare(queue="task_queue", durable=True, passive=True)
+# queue_size = rabbit_queue.method.message_count
 
-
+#%%
 @worker_init.connect
 def init_worker(**kwargs):
     global engine
