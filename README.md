@@ -31,7 +31,7 @@ python3 setup_scenarios.py -n 20
 1. Start the dashboard. Run:
 ```
 cd Dashboard
-streamlit run ndash.py
+streamlit run dash.py
 ```
 
 ## Ants Simulation
