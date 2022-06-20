@@ -3,7 +3,7 @@ import celery
 from sqlalchemy import MetaData, and_, create_engine, update, insert, select
 from celery import Celery
 from colorama import Fore, Style
-from celery.signals import worker_init
+from celery.signals import worker_init, worker_process_init
 
 def print_red(text:str):
     print(Fore.BLUE + str(text)+ Style.RESET_ALL)
@@ -15,8 +15,12 @@ BROKER_URL=f"{transport}://{userid}:{password}@{hostname}:{port}/"
 app = Celery("tasks", broker=BROKER_URL)
 app.conf.update()
 
+engine_database = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
+meta = MetaData(bind=engine_database)
+MetaData.reflect(meta)
 from operational_credentials import *
 
+@worker_process_init.connect
 @worker_init.connect
 def init_worker(**kwargs):
     print_red("Worker initialized")
