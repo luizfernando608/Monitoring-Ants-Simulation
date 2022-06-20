@@ -15,10 +15,11 @@ BROKER_URL=f"{transport}://{userid}:{password}@{hostname}:{port}/"
 app = Celery("tasks", broker=BROKER_URL)
 app.conf.update()
 
+from operational_credentials import *
 engine_database = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
 meta = MetaData(bind=engine_database)
 MetaData.reflect(meta)
-from operational_credentials import *
+
 
 @worker_process_init.connect
 @worker_init.connect
