@@ -1,16 +1,19 @@
 #select * from Global
-#select * from Cenario where Cenario.id = ID
+#select * from Scenario where Scenario.id = ID
 
 from sqlalchemy import MetaData, create_engine, select
 
 ## utilizei o banco antigo para fazer alguns testes mas os nomes das tabelas já está o nome do analitico...
 
-database_type = "postgresql"
-user_database = "ympevcvwzchqwr"
-password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
-port = "5432"
-database_name = "d6rl9e5tvp50sh"
+# database_type = "postgresql"
+# user_database = "ympevcvwzchqwr"
+# password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
+# hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
+# port = "5432"
+# database_name = "d6rl9e5tvp50sh"
+
+from datawarehouse_credentials import *
+
 engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
 meta = MetaData(bind=engine)
 MetaData.reflect(meta)
@@ -38,19 +41,13 @@ def retorn_global():
               mean_food_stored_per_ant INT NOT NULL,
               max_food_stored INT NOT NULL
     '''
-    s = 'select * from Global;'
-    return engine.execute(s).fetchall()[-1]
+    s = 'select * from Global order by timestamp;'
+    r = engine.execute(s).fetchall()
+    if len(r)==0:
+        return 16*[0]
+    else:
+        return r[-1]
 
-[NCenario, NFormigueiro, NFormigas, NFProcurando,NFCarregando , NComida, NCFonte, 
- NCFormigueiro, NCTransito, MediaTempo, IDMinTempo, MinTempo, IDMaxTempo, 
- MaxTempo,MediaCarregado, MaxCarregado] = retorn_global()
-
-
-MaxTempo = round(MaxTempo,3)
-MinTempo = round(MinTempo,3)
-MediaTempo = round(MediaTempo,3)
-
-MediaCarregado = round(MediaCarregado,3)
 #%%
 def retorna_lista_cenario():
     '''
@@ -62,11 +59,10 @@ def retorna_lista_cenario():
         lista de cenarios
 
     '''
-    s = 'select id from Cenario'
+    s = 'select id from Scenario'
     return [i[0] for i in engine.execute(s).fetchall()]
     
     
-print(retorna_lista_cenario())
 
 #%%
 def retorna_cenario(ID):
@@ -93,9 +89,11 @@ def retorna_cenario(ID):
         prob_win FLOAT NOT NULL,
 
     '''
-    scenario = meta.tables["Cenario"]
+    scenario = meta.tables["scenario"]
     s = select(scenario).where(scenario.c.id==ID)
-    return engine.execute(s).fetchall()[-1]
+    r = engine.execute(s).fetchall()
+    if len(r)==0:
+        return ['']+9*[0]
+    else:
+        return r[-1]
 
-
-print(retorna_cenario(retorna_lista_cenario()[0]))
