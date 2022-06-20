@@ -15,3 +15,4 @@ six==1.16.0
 SQLAlchemy==1.4.37
 vine==5.0.0
 wcwidth==0.2.5
+psycopg2-binary

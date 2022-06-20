@@ -1,0 +1,5 @@
+transport = "amqps"
+userid = "allc"
+password = "formigueiro123"
+hostname="b-ee432138-0b79-4f52-885d-19d4d18361d7.mq.us-east-1.amazonaws.com"
+port="5671"
