@@ -339,7 +339,7 @@ while True:
             C8 = C8[0][1]
 
         C9 = elapsed_scenario(cenario)
-        C10= C7/C6
+        C10= (C7+C8)/(C6+C7+C8)*100
 
         if not does_scenario_exists(cenario):
             query_scenario =insert(cenario_table).values(
