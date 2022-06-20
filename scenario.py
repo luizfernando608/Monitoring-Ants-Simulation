@@ -368,7 +368,7 @@ class SimulationServer():
     def RunSimulation(self):    
         count = 0
         # while self.mapa.anthill_food <= self.NUM_FORMIGAS*30:
-        for i in range(100):
+        for i in range(1000):
             ants_report = []
 
             for formiga in self.formigas:
@@ -387,13 +387,13 @@ class SimulationServer():
 
 #%%
 
-
-start_time = time()
-print_blue(start_time)
-simulation = SimulationServer()
-simulation.StartScenario()
-print("Scenario started")
-simulation.RunSimulation()
-print("Scenario ended")
-
+while True:
+    start_time = time()
+    print_blue(start_time)
+    simulation = SimulationServer()
+    simulation.StartScenario()
+    print("Scenario started")
+    simulation.RunSimulation()
+    print("Scenario ended")
+    sleep(0.1)
 # print("Total time: ", time() - start_time)
