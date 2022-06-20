@@ -135,9 +135,6 @@ def does_scenario_exists(id_scenario:str)->bool:
 @app.task
 def publish_data(data:dict):
     # VERIFY IF EXIST SCENARIO
-    engine_database = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
-    meta = MetaData(bind=engine_database)
-    MetaData.reflect(meta)
     scenario_exist = does_scenario_exists(data['id_scenario_instance'])
     print_red("scenario_exist: " + str(scenario_exist))
     if not scenario_exist:
