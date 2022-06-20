@@ -3,15 +3,6 @@
 
 from sqlalchemy import MetaData, create_engine, select
 
-## utilizei o banco antigo para fazer alguns testes mas os nomes das tabelas já está o nome do analitico...
-
-# database_type = "postgresql"
-# user_database = "ympevcvwzchqwr"
-# password  = "34d49e45118ea441d83d827b2c4cb63831f8ec847444a950c53b5b2232c87996"
-# hostname = "ec2-34-198-186-145.compute-1.amazonaws.com"
-# port = "5432"
-# database_name = "d6rl9e5tvp50sh"
-
 from datawarehouse_credentials import *
 
 engine = create_engine(f"{database_type}://{user_database}:{password}@{hostname}:{port}/{database_name}")
