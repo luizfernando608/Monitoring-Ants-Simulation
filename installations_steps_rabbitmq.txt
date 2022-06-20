@@ -1,0 +1,22 @@
+rabbitmq
+apt-get update
+apt-get install rabbitmq-server
+
+systemctl start rabbitmq-server
+systemctl enable rabbitmq-server
+
+systemctl status rabbitmq-server
+
+Create User
+rabbitmqctl add_user admin password
+
+
+https://www.hackerxone.com/2021/08/24/steps-to-install-rabbitmq-on-ubuntu-20-04/
+
+
+database_type = "postgresql"
+user_database = "root"
+password  = "root"
+hostname = "localhost"
+port = "5432"
+database_name = "test_db"
