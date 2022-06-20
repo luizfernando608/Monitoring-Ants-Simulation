@@ -57,7 +57,6 @@ else:
     c = st.container()
 
     c1,l = c.columns([2,3])
-    print(retorna_lista_cenario())
     seletor = c1.selectbox('Qual cenário quer observar?',['']+retorna_lista_cenario())
     if seletor !='':
         [CID,CNFormigueiros,CNFormigas,CNFProcurando,CNFCarregando,CNCFonte,
@@ -76,13 +75,13 @@ else:
         c_0.title('Formigueiro '+str(1))
         l,c1,c2,c3,l = c.columns([1,3,3,3,1])
         c1.metric('Numero Formigas',CNFormigas)
-        c1.write(f"- % Carregando: {CNFCarregando/CNFormigas*100} %")
-        c1.write(f"- % Procurando: {CNFProcurando/CNFormigas*100} %")
+        c1.write(f"- % Carregando: {round(CNFCarregando/CNFormigas*100,2)} %")
+        c1.write(f"- % Procurando: {round(CNFProcurando/CNFormigas*100,2)} %")
         c1.empty()
         total_food_A = CNCTransito + CNCFormigueiro
         c2.metric('Numero Comida', total_food_A) 
-        c2.write(f"- % Formigueiro: {CNCFormigueiro/(total_food_A)*100} %")
-        c2.write(f"- % Transito: {CNCTransito/(total_food_A)*100} %")
+        c2.write(f"- % Formigueiro: {round(CNCFormigueiro/(total_food_A)*100,2)} %")
+        c2.write(f"- % Transito: {round(CNCTransito/(total_food_A)*100,2)} %")
         c3.metric('Probabilidade',str(CProb) +' %')
 
 
